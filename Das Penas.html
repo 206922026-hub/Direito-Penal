@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget de Estudo Avançado: Teoria Geral das Penas</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --container-bg: #ffffff;
+            --primary-color: #1a365d;
+            --secondary-color: #2b6cb0;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --correct-bg: #c6f6d5;
+            --correct-border: #38a169;
+            --correct-text: #22543d;
+            --incorrect-bg: #fed7d7;
+            --incorrect-border: #e53e3e;
+            --incorrect-text: #742a2a;
+            --option-hover: #edf2f7;
+            --border-radius: 8px;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .widget-container {
+            background-color: var(--container-bg);
+            max-width: 900px;
+            width: 100%;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .widget-header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 20px 30px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .widget-header h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-container {
+            height: 6px;
+            background-color: #e2e8f0;
+            width: 100%;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #4299e1;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .widget-content {
+            padding: 30px;
+        }
+
+        .question-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-bottom: 2px solid #edf2f7;
+            padding-bottom: 10px;
+        }
+
+        .priority-badge {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .priority-badge.red { background-color: #fff5f5; color: #c53030; }
+        .priority-badge.orange { background-color: #fffaf0; color: #dd6b20; }
+        .priority-badge.yellow { background-color: #fffff0; color: #b7791f; }
+
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+            text-align: justify;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            padding: 16px 20px;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-main);
+            display: flex;
+            align-items: flex-start;
+            line-height: 1.5;
+        }
+
+        .option-letter {
+            font-weight: 700;
+            margin-right: 15px;
+            min-width: 24px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: var(--option-hover);
+            border-color: #cbd5e1;
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-bg);
+            border-color: var(--correct-border);
+            color: var(--correct-text);
+        }
+
+        .option-btn.incorrect {
+            background-color: var(--incorrect-bg);
+            border-color: var(--incorrect-border);
+            color: var(--incorrect-text);
+        }
+
+        .explanation-container {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .explanation-container.show {
+            display: block;
+        }
+
+        .explanation-card {
+            background-color: #f8fafc;
+            border-left: 4px solid var(--secondary-color);
+            padding: 20px;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            margin-bottom: 25px;
+        }
+
+        .explanation-title {
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explanation-text {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .explanation-breakdown {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .explanation-breakdown h4 {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .explanation-item {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            padding-left: 10px;
+            border-left: 2px solid #cbd5e1;
+            text-align: justify;
+        }
+
+        .btn-next {
+            display: none;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            float: right;
+            margin-bottom: 20px;
+        }
+
+        .btn-next.show {
+            display: block;
+        }
+
+        .btn-next:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .result-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-score {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin: 20px 0;
+        }
+
+        .result-message {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .btn-restart {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .widget-header { flex-direction: column; text-align: center; gap: 10px; }
+            .widget-content { padding: 20px 15px; }
+            .option-btn { padding: 12px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="widget-container">
+    <div class="widget-header">
+        <h1>Teoria Geral das Penas e Execução</h1>
+        <span style="font-size: 0.9rem; opacity: 0.8;">Nível Avançado</span>
+    </div>
+    
+    <div class="progress-bar-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <div class="widget-content" id="quiz-screen">
+        <div class="question-meta">
+            <span id="q-counter">Questão 1 / 20</span>
+            <span id="q-priority" class="priority-badge">🔴 ALTÍSSIMA PRIORIDADE</span>
+        </div>
+
+        <div class="question-text" id="q-text">
+            Carregando questão...
+        </div>
+
+        <div class="options-container" id="options-container">
+            <!-- Botões gerados via JS -->
+        </div>
+
+        <div class="explanation-container" id="explanation-container">
+            <div class="explanation-card">
+                <div class="explanation-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Fundamentação da Resposta
+                </div>
+                <div class="explanation-text" id="exp-main">
+                    <!-- Fundamentação da correta -->
+                </div>
+                <div class="explanation-breakdown">
+                    <h4>Análise das Alternativas:</h4>
+                    <div id="exp-breakdown">
+                        <!-- Erros das demais -->
+                    </div>
+                </div>
+            </div>
+            <button class="btn-next" id="btn-next" onclick="nextQuestion()">Avançar ➔</button>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+        <h2>Desempenho Final</h2>
+        <div class="result-score" id="final-score">0%</div>
+        <div class="result-message" id="final-message">Concluído.</div>
+        <button class="btn-restart" onclick="restartQuiz()">Refazer Bateria</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "No que tange às teorias sobre as finalidades da pena, assinale a alternativa que indica corretamente o modelo adotado pelo Código Penal Brasileiro (Art. 59) e sua respectiva função:",
+            options: [
+                { text: "Teoria Absoluta, tendo como foco exclusivo a retribuição do mal causado, servindo a pena como um fim em si mesma.", correct: false },
+                { text: "Teoria Mista (Eclética/Unificadora), que atribui à pena tanto a finalidade de reprovar o crime praticado (retribuição) quanto a de prevenir a ocorrência de novos delitos.", correct: true },
+                { text: "Teoria Relativa da Prevenção Especial Negativa, focada unicamente na neutralização do criminoso e sua retirada definitiva do convívio social.", correct: false },
+                { text: "Teoria Preventiva Geral Positiva, voltada para a intimidação da coletividade pelo medo da punição penal.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. O Código Penal Brasileiro adotou expressamente a Teoria Mista (ou Eclética/Unificadora) no art. 59, que estabelece que a pena deve ser necessária e suficiente para a <em>reprovação</em> (viés retributivo) e <em>prevenção</em> (viés relativo) do crime.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> O Brasil não adota a teoria absoluta de forma exclusiva. A pena não é apenas um castigo pelo mal causado, devendo também buscar a prevenção de novos crimes.",
+                "<strong>C) Incorreta.</strong> O sistema não se baseia unicamente na neutralização (prevenção especial negativa). A ressocialização (positiva) e a retribuição também compõem a finalidade mista da pena.",
+                "<strong>D) Incorreta.</strong> A teoria que causa intimidação e medo na sociedade é a Prevenção Geral <em>Negativa</em>. A Positiva visa reforçar a confiança na lei, demonstrando que o Direito funciona."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Sobre a transferência dos efeitos da condenação (Princípio da Intranscendência), assinale a assertiva correta de acordo com a jurisprudência e o texto constitucional (Art. 5º, XLV, CF):",
+            options: [
+                { text: "Com o falecimento do condenado, a pena de multa e a obrigação de reparar o dano transferem-se aos herdeiros, limitadas às forças da herança.", correct: false },
+                { text: "A obrigação de reparar o dano e a decretação do perdimento de bens podem ser estendidas aos sucessores e executadas contra eles, até o limite do valor do patrimônio transferido.", correct: true },
+                { text: "O princípio da intranscendência veda de forma absoluta qualquer extensão dos efeitos da condenação penal aos herdeiros, sejam eles penais ou civis.", correct: false },
+                { text: "A pena de multa, por ter natureza patrimonial e não privativa de liberdade, transfere-se aos sucessores independentemente da existência de herança.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. É a exceção prevista no próprio texto constitucional (art. 5º, XLV, CF): a obrigação de reparar o dano (natureza civil) e o perdimento de bens podem passar aos sucessores, respeitando estritamente o limite do valor transferido pela herança.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> A pena de multa é <em>sanção penal</em> e submete-se à intranscendência. Portanto, a multa NÃO se transfere aos herdeiros, apagando-se com a morte do condenado.",
+                "<strong>C) Incorreta.</strong> A vedação não é absoluta para os efeitos civis. A Constituição autoriza expressamente que a reparação do dano ultrapasse a pessoa do condenado, atingindo os herdeiros até o limite da herança.",
+                "<strong>D) Incorreta.</strong> A multa é sanção de caráter penal. O fato de ter natureza pecuniária não autoriza sua transferência aos herdeiros. Ela jamais passa da pessoa do condenado."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Considerando a jurisprudência atualizada do Supremo Tribunal Federal sobre a Execução Provisória da Pena, assinale a opção correta:",
+            options: [
+                { text: "É amplamente permitida a execução provisória da pena decorrente de condenação confirmada em 2ª instância (TJ/TRF), independentemente da natureza do crime.", correct: false },
+                { text: "A execução provisória da pena imposta pelo Tribunal do Júri só é admitida de forma imediata se a condenação for igual ou superior a 15 anos.", correct: false },
+                { text: "É permitida a imediata execução da condenação imposta pelo Tribunal do Júri, independentemente da quantidade de pena aplicada, em razão da soberania dos veredictos.", correct: true },
+                { text: "O princípio da presunção de inocência impede de forma absoluta qualquer prisão antes do trânsito em julgado, não sendo possível a decretação de prisão preventiva em nenhuma hipótese.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>C</strong>. Conforme fixado no Tema 1.068 do STF (RE 1.235.340), a soberania dos veredictos do Tribunal do Júri (Art. 5º, XXXVIII, 'c', CF) autoriza a imediata execução da pena imposta pelos jurados, <em>independentemente</em> da quantidade da pena.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> O STF, no julgamento das ADCs 43, 44 e 54, proibiu como regra a execução provisória da pena após condenação em 2ª instância, prestigiando a presunção de inocência.",
+                "<strong>B) Incorreta.</strong> Embora o Pacote Anticrime (Art. 492, I, 'e', CPP) previsse o requisito de 'igual ou superior a 15 anos', o STF superou essa exigência no Tema 1068, permitindo a execução imediata para <em>qualquer</em> quantidade de pena no Júri.",
+                "<strong>D) Incorreta.</strong> Antes do trânsito em julgado, o réu pode sim ser preso de forma cautelar (como a prisão preventiva), desde que preenchidos os rigorosos requisitos do art. 312 do CPP. O que se veda (como regra) é a prisão <em>pena</em> antecipada."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Com as alterações promovidas pela Lei 13.964/19 (Pacote Anticrime) e o entendimento sumulado do STF (Súmula 715), o limite das penas no Brasil funciona da seguinte forma:",
+            options: [
+                { text: "O tempo máximo de cumprimento é de 40 anos, devendo os benefícios executórios (como progressão) serem calculados sobre este limite de 40 anos.", correct: false },
+                { text: "O tempo máximo de cumprimento é de 30 anos, servindo este teto como base de cálculo unificada para progressão de regime e livramento condicional.", correct: false },
+                { text: "O tempo máximo de cumprimento das penas privativas de liberdade não pode ser superior a 40 anos. Contudo, a base de cálculo para concessão de benefícios executórios permanece sendo o total da pena imposta.", correct: true },
+                { text: "A lei proíbe penas de caráter perpétuo, mas permite penas de até 50 anos para crimes hediondos com resultado morte.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>C</strong>. O art. 75 do CP (alterado pelo Pacote Anticrime) elevou o limite de cumprimento de pena para 40 anos. Contudo, pela Súmula 715 do STF, a unificação serve apenas para limitar o tempo físico na prisão, enquanto os benefícios (ex: progressão) são calculados sobre a <em>pena total</em> imposta, seja ela de 100, 200 anos, etc.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> Os benefícios executórios NÃO são calculados sobre o teto (40 anos). Se assim fosse, violaria a lógica da individualização da pena para condenações altíssimas (Súmula 715 STF).",
+                "<strong>B) Incorreta.</strong> 30 anos era o limite antigo (antes do Pacote Anticrime de 2019). Hoje o limite é de 40 anos.",
+                "<strong>D) Incorreta.</strong> O limite absoluto vigente no Brasil para cumprimento de pena privativa de liberdade é de 40 anos, independentemente se o crime é hediondo ou comum."
+            ]
+        },
+        {
+            priority: "🟠 ALTA PRIORIDADE",
+            priorityClass: "orange",
+            text: "A respeito das subdivisões da Teoria Relativa (Preventiva) dos fins da pena, a função que busca reeducar e reintegrar o preso à sociedade denomina-se:",
+            options: [
+                { text: "Prevenção Geral Negativa.", correct: false },
+                { text: "Prevenção Geral Positiva.", correct: false },
+                { text: "Prevenção Especial Negativa.", correct: false },
+                { text: "Prevenção Especial Positiva.", correct: true }
+            ],
+            expMain: "A alternativa correta é a <strong>D</strong>. A Prevenção Especial (direcionada ao próprio condenado, ao indivíduo) na sua vertente Positiva tem o foco principal na ressocialização, buscando reeducar e reintegrar o criminoso para que ele não volte a delinquir após cumprir a pena.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> Prevenção Geral Negativa dirige-se à sociedade (geral) buscando a intimidação e o medo da punição.",
+                "<strong>B) Incorreta.</strong> Prevenção Geral Positiva dirige-se à sociedade visando reforçar a confiança nas instituições e de que a lei funciona (integradora).",
+                "<strong>C) Incorreta.</strong> Prevenção Especial Negativa foca no condenado, mas visa apenas sua neutralização (tirar do convívio social prendendo-o), e não sua reeducação."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "O princípio da individualização da pena (Art. 5º, XLVI, CF) impõe a adequação da sanção ao autor e à gravidade do delito. A doutrina assinala que este princípio atua em três fases (tricotômica). O sistema de progressão de regime, saídas temporárias e exame criminológico ocorre em qual destas fases?",
+            options: [
+                { text: "Fase Legislativa.", correct: false },
+                { text: "Fase Judicial.", correct: false },
+                { text: "Fase Executória.", correct: true },
+                { text: "Fase Policial e Investigativa.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>C</strong>. A individualização ocorre na fase Executória durante o efetivo cumprimento da sanção imposta, sendo o momento em que se avalia o mérito do preso para benefícios como progressão de regime, concessão de saídas temporárias e exame criminológico.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> A fase legislativa ocorre de forma abstrata quando o legislador tipifica o crime e estabelece os patamares mínimo e máximo da pena.",
+                "<strong>B) Incorreta.</strong> A fase judicial (sistema trifásico) é a que ocorre na sentença, onde o juiz quantifica a pena exata ao caso concreto com base nas provas do processo.",
+                "<strong>D) Incorreta.</strong> Não existe individualização da pena (no sentido estrito do art. 5º) na fase policial, pois neste momento não há sanção imposta a ser dosada ou executada."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Em obediência ao Princípio da Humanidade, a Constituição (Art. 5º, XLVII) veda de forma explícita determinadas modalidades de penas no ordenamento brasileiro. Sobre o tema, é correto afirmar:",
+            options: [
+                { text: "São vedadas penas de banimento, de trabalhos forçados e de morte, sem qualquer exceção prevista no texto constitucional.", correct: false },
+                { text: "É vedada a pena de morte, salvo em caso de guerra declarada, hipótese em que o Brasil adota a morte por fuzilamento (conforme o Código Penal Militar).", correct: true },
+                { text: "São admitidas penas de caráter perpétuo exclusivamente para crimes inafiançáveis e imprescritíveis, como o racismo.", correct: false },
+                { text: "A proibição de penas cruéis pode ser relativizada, em sede de execução penal, caso o réu seja reincidente específico em crimes hediondos.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. O Princípio da Humanidade proíbe rigorosamente penas degradantes. A única exceção admitida no texto constitucional é a pena de morte em caso de guerra declarada (Art. 84, XIX, CF), cuja execução se dá por fuzilamento segundo o CPM.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> A proibição da pena de morte comporta a exceção da guerra declarada. Apenas as penas de banimento, trabalhos forçados, cruéis e caráter perpétuo são proibidas sem qualquer exceção.",
+                "<strong>C) Incorreta.</strong> Penas de caráter perpétuo são vedadas sem exceção (motivo pelo qual há o teto máximo de 40 anos no CP), mesmo para crimes imprescritíveis e hediondos.",
+                "<strong>D) Incorreta.</strong> A vedação de penas cruéis é absoluta. Não pode ser relativizada por qualquer condição do réu, nem mesmo por reincidência em crimes hediondos."
+            ]
+        },
+        {
+            priority: "🟠 ALTA PRIORIDADE",
+            priorityClass: "orange",
+            text: "O Princípio da Proporcionalidade atua em dupla via no Direito Penal brasileiro. Como ele se manifesta especificamente como 'garantia de proteção deficiente'?",
+            options: [
+                { text: "Impondo que o Estado aplique a menor pena possível ao réu, prestigiando a intervenção mínima.", correct: false },
+                { text: "Proibindo penas excessivamente brandas para crimes graves, garantindo que a sociedade tenha a tutela efetiva dos bens jurídicos mais importantes.", correct: true },
+                { text: "Limitando o poder punitivo do Estado para proibir o excesso e o rigor desmedido das leis penais.", correct: false },
+                { text: "Impedindo que falhas na defesa técnica do réu no curso do processo ensejem aumento da pena na fase executória.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. A proibição da <em>proteção deficiente</em> (vertente positiva da proporcionalidade) determina que o Estado não pode falhar ao proteger bens jurídicos fundamentais com penas irrisórias. Crimes graves exigem respostas penais proporcionais a essa gravidade.",
+            expBreakdown: [
+                "<strong>A e C) Incorretas.</strong> Estas alternativas descrevem a outra vertente do princípio: a 'proibição do excesso', que serve para limitar o poder punitivo estatal e evitar penas desproporcionalmente altas.",
+                "<strong>D) Incorreta.</strong> O conceito de proteção deficiente no âmbito do princípio da proporcionalidade penal não se refere à técnica da defesa no processo, mas sim à suficiência da sanção abstrata/concreta para tutelar o bem jurídico."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "O Princípio da Legalidade (e da Anterioridade) é a viga mestra do Direito Penal. Uma das suas consequências diretas expressas na doutrina majoritária é:",
+            options: [
+                { text: "A permissão da edição de Medidas Provisórias (MPs) para tipificar novos crimes, desde que haja relevância e urgência nacional.", correct: false },
+                { text: "A autorização do uso da analogia 'in malam partem' para suprir lacunas da lei penal que beneficiem réus de alta periculosidade.", correct: false },
+                { text: "A proibição da retroatividade da lei mais gravosa (lex gravior) e a vedação à criação de crimes ou penas via Medida Provisória.", correct: true },
+                { text: "A desnecessidade de lei anterior desde que o crime seja chancelado pelo clamor social e pela jurisprudência pacificada do STF.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>C</strong>. Da legalidade penal (Art. 5º, XXXIX, CF) extraem-se proibições basilares: a lei penal não pode retroagir para prejudicar o réu; é vedado o uso de analogia para prejudicar (in malam partem); e veda-se estritamente a criação de crimes ou exasperação de penas por meio de Medidas Provisórias.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> É expressamente proibida a edição de Medida Provisória para tipificar crimes ou majorar penas, não importando a urgência, pois fere a estrita legalidade (reserva de lei ordinária/complementar).",
+                "<strong>B) Incorreta.</strong> A analogia em direito penal só é permitida <em>in bonam partem</em> (para beneficiar o réu). O uso para prejudicar (in malam partem) é vedado pela exigência de tipicidade cerrada.",
+                "<strong>D) Incorreta.</strong> Clamor social ou jurisprudência não podem, em hipótese alguma, suprir a ausência de lei anterior que defina o crime, conforme o aforismo 'nullum crimen, nulla poena sine lege'."
+            ]
+        },
+        {
+            priority: "🟡 COMPLEMENTAR",
+            priorityClass: "yellow",
+            text: "O conceito analítico/estrutural estabelecido pela doutrina define a pena como sanção imposta pelo Estado no exercício da jurisdição. Qual das alternativas traduz corretamente seus vetores?",
+            options: [
+                { text: "Trata-se de uma sanção de caráter puramente moral, imposta extrajudicialmente a autor de conduta lícita, mas reprovável socialmente.", correct: false },
+                { text: "Consiste na sanção penal de caráter aflitivo, imposta mediante o devido processo legal a autor de infração penal, visando reprovar e prevenir.", correct: true },
+                { text: "É uma compensação civil, estipulada pelo Estado-Juiz em fase extrajudicial, independente do processo e focada na indenização da vítima.", correct: false },
+                { text: "Consiste unicamente num meio administrativo de controle comportamental que dispensa a existência do devido processo legal nos crimes de menor potencial ofensivo.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. O conceito jurídico estabelece que a pena possui natureza de sanção penal com caráter <em>aflitivo</em> (restringe bens do condenado), aplicável exclusivamente ao autor culpável de uma infração penal, obrigatoriamente através da jurisdição e do <em>devido processo legal</em>, unindo retribuição (reprovar) e prevenção.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> A sanção penal não é moral ou extrajudicial. Aplica-se apenas a condutas penalmente típicas (ilícitas), jamais lícitas, através da jurisdição estatal.",
+                "<strong>C) Incorreta.</strong> A pena é sanção penal (Direito Público), e não mera compensação civil (embora a reparação do dano seja efeito da condenação). Depende estritamente de processo penal.",
+                "<strong>D) Incorreta.</strong> Mesmo nos crimes de menor potencial ofensivo, o devido processo legal é condição inafastável. A pena jamais atua como sanção meramente administrativa dispensada de jurisdição."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Kant e Hegel são apontados como pensadores defensores da Teoria Absoluta. Como eles concebiam fundamentalmente os fins da pena?",
+            options: [
+                { text: "A pena deve olhar para o futuro, atuando como um instrumento profilático de intimidação da sociedade (prevenção geral).", correct: false },
+                { text: "O Direito deve buscar exclusivamente a reinserção social do detento por meio do trabalho e educação na prisão.", correct: false },
+                { text: "A pena mira o passado, servindo como um fim em si mesma, focando estritamente na retribuição (castigo) pelo mal causado ao cometer o delito.", correct: true },
+                { text: "Deve haver um sistema misto (eclético) equilibrando a intimidação preventiva e o perdão irrestrito para crimes sem violência.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>C</strong>. Na Teoria Absoluta (defendida por Kant e Hegel), a pena não precisa ter uma finalidade utilitária de evitar novos crimes. Ela é um <em>fim em si mesma</em> (punitiva). Pune-se porque pecou (<em>punitur quia peccatum est</em>), focando a retribuição justa e proporcional pelo mal do passado.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> Olhar para o futuro e intimar a sociedade são premissas das Teorias Relativas (Prevenção Geral), totalmente rechaçadas pelo absolutismo kantiano.",
+                "<strong>B) Incorreta.</strong> A ressocialização é a vertente Positiva da Prevenção Especial (teoria relativa utilitarista).",
+                "<strong>D) Incorreta.</strong> Kant e Hegel não defendiam um sistema misto (este é adotado pelo Código Penal Brasileiro). O absolutismo não pondera utilidades futuras nem perdoabilidade sistemática."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Um juiz condena João, sem trânsito em julgado (ainda cabe recurso aos tribunais superiores). O juiz afirma que João deve iniciar imediatamente a execução provisória da pena pois os recursos pendentes não têm efeito suspensivo automático. Paralelamente, decreta a prisão preventiva de João, motivando-a no risco à ordem pública (art. 312 do CPP). Qual a distinção correta apontada pelas bancas de concursos sobre estes institutos?",
+            options: [
+                { text: "A execução provisória da pena é permitida pelo STF após a segunda instância; a prisão preventiva não.", correct: false },
+                { text: "Ambos os institutos são idênticos, pois resultam no encarceramento do réu antes de findarem os recursos.", correct: false },
+                { text: "A prisão preventiva necessita de requisitos cautelares provados (Art. 312, CPP); a execução provisória da pena, que é o cumprimento antecipado sem base cautelar, foi proibida como regra pelo STF (presunção de inocência).", correct: true },
+                { text: "A presunção de inocência impede a prisão preventiva, permitindo apenas a execução provisória nos tribunais superiores.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>C</strong>. A execução provisória da pena ocorre apenas com a condenação, antecipando o cumprimento sem precisar demonstrar perigo. O STF proibiu isso nas ADCs 43, 44 e 54. Já a prisão preventiva é uma medida cautelar (não é execução de pena); ela exige a comprovação dos requisitos do art. 312 CPP (ex: risco à ordem pública).",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> O STF <em>proibiu</em> a execução provisória após a segunda instância (salvo júri). A prisão preventiva, desde que fundamentada cautelarmente, é sim permitida.",
+                "<strong>B) Incorreta.</strong> São juridicamente distintos. Execução provisória exige apenas a condenação em grau recursal. Preventiva exige risco demonstrado à ordem, fuga, etc. (natureza acautelatória).",
+                "<strong>D) Incorreta.</strong> A presunção de inocência não impede a prisão preventiva quando estão presentes e provados seus estritos requisitos cautelares da lei."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Com base na exceção aberta pelo STF no Tema 1.068 sobre Execução Provisória, analise o caso: Pedro é condenado pelo Tribunal do Júri a 8 anos de prisão em regime fechado. É cabível a execução imediata desta pena?",
+            options: [
+                { text: "Sim, é permitida a execução imediata pois, no Tribunal do Júri, a soberania dos veredictos autoriza o cumprimento imediato independentemente da quantidade de pena imposta.", correct: true },
+                { text: "Não. A execução no Tribunal do Júri depende estritamente de a pena aplicada ser igual ou superior a 15 anos, conforme redação do Pacote Anticrime, não afetada pela jurisprudência.", correct: false },
+                { text: "Não, pois o STF determinou a vedação total e absoluta de qualquer execução antecipada, mesmo no Júri (ADCs 43, 44 e 54).", correct: false },
+                { text: "Sim, mas dependerá da confirmação obrigatória pelo Tribunal de Justiça Estadual em segunda instância, que suspende os efeitos da condenação.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>A</strong>. Apesar do Pacote Anticrime tentar vincular a execução no Júri ao patamar de 15 anos, o STF firmou tese de repercussão geral (Tema 1068, Set/2023) estabelecendo que a soberania dos veredictos autoriza a execução imediata, de forma irrestrita à quantidade de pena estabelecida.",
+            expBreakdown: [
+                "<strong>B) Incorreta.</strong> A jurisprudência do STF (Tema 1068) superou a restrição legal dos 15 anos do Pacote Anticrime (Art. 492, I, 'e', CPP). A execução imediata cabe para qualquer pena.",
+                "<strong>C) Incorreta.</strong> A vedação das ADCs 43, 44 e 54 aplica-se ao juiz singular/segunda instância (regra). O Júri figura como a grande exceção constitucional devido à soberania de seus veredictos.",
+                "<strong>D) Incorreta.</strong> A execução do Júri é <em>imediata</em> após a sentença no plenário da 1ª instância (presidida pelo juiz-presidente). Não há efeito suspensivo aguardando o TJ."
+            ]
+        },
+        {
+            priority: "🟠 ALTA PRIORIDADE",
+            priorityClass: "orange",
+            text: "Um réu foi condenado a 80 anos de prisão. Para requerer o benefício do livramento condicional, a Defensoria Pública alega que, como o tempo máximo de cumprimento no Brasil é de 40 anos, o cálculo para as frações de benefícios deve ter como base teto os 40 anos. Segundo o STF (Súmula 715):",
+            options: [
+                { text: "A Defensoria Pública está correta, sendo ilegal exigir cálculo sobre a pena que não será fisicamente cumprida.", correct: false },
+                { text: "A Defensoria Pública está equivocada. A unificação serve apenas para limitar o tempo físico na prisão, sendo os benefícios calculados sobre o total da pena imposta (80 anos).", correct: true },
+                { text: "A Defensoria Pública está parcialmente correta, pois a Súmula 715 isenta o cálculo unificado apenas para a progressão de regime, não valendo para o livramento condicional.", correct: false },
+                { text: "A Defensoria Pública está equivocada pelo limite do teto aplicável na Súmula 715, que é fixado obrigatoriamente em 30 anos e não em 40.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. Este é o exato teor interpretativo da Súmula 715/STF e uma clássica 'pegadinha' de prova. A pena é limitada a 40 anos apenas para garantir a humanidade do limite físico de aprisionamento. Contudo, para se alcançar o mérito dos benefícios (progressão, livramento), usa-se a pena TOTAL (no caso, 80 anos) no denominador da fração.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> O sistema e a jurisprudência sumulada rejeitam esse cálculo, senão condenar um réu a 40 anos ou a 500 anos resultaria na concessão de benefícios com o mesmíssimo tempo na cadeia, ferindo a individualização.",
+                "<strong>C) Incorreta.</strong> A súmula aplica-se amplamente ao cálculo dos benefícios executórios da LEP, englobando progressão, livramento condicional e outros.",
+                "<strong>D) Incorreta.</strong> O teto foi atualizado pelo Pacote Anticrime (Lei 13.964/19) de 30 para 40 anos. A Súmula 715 adapta-se perfeitamente à regra atual do art. 75 do CP."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Relacione corretamente o viés da teoria penal que aduz: 'A pena serve para retirar o criminoso do convívio social, enclausurando-o de forma profilática para a proteção da sociedade'.",
+            options: [
+                { text: "Teoria Absoluta de cunho kantiano.", correct: false },
+                { text: "Prevenção Geral Negativa.", correct: false },
+                { text: "Prevenção Especial Negativa.", correct: true },
+                { text: "Prevenção Especial Positiva.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>C</strong>. A teoria utilitarista focada no criminoso (Prevenção Especial) e que atua limitando fisicamente a sua liberdade (retirando o poder de ofender a sociedade) é chamada de Negativa, ou de 'Neutralização'.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> A teoria absoluta rejeita a utilidade profilática (proteger a sociedade). Foca só na pura punição do passado.",
+                "<strong>B) Incorreta.</strong> A Prevenção Geral (negativa) busca amedrontar a sociedade. Não atua isolando fisicamente o indivíduo, atua através do medo psicológico da norma no meio social.",
+                "<strong>D) Incorreta.</strong> A Prevenção Especial Positiva preocupa-se com o futuro do criminoso sob a óptica humanista e de reinserção (reeducação e ressocialização), não em sua segregação pura."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "O princípio da Intranscendência impõe um limite subjetivo severo à pretensão punitiva do Estado. Se João comete uma fraude bilionária, forja notas fiscais e vem a óbito logo após o trânsito em julgado de condenação com pena de multa e obrigação civil de reparar. Deixou para o filho dezoito milhões de reais de herança. Assinale o curso correto:",
+            options: [
+                { text: "A multa penal e a reparação civil são executadas integralmente contra o filho, pois a herança milionária descaracteriza a vedação constitucional.", correct: false },
+                { text: "O filho pagará apenas a pena de multa, limitando-se ao valor dos dezoito milhões, pois a reparação civil foi extinta com a morte do réu.", correct: false },
+                { text: "Nem a multa nem a reparação civil podem atingir o filho, pois o princípio impede categoricamente efeitos diretos ou indiretos após a morte.", correct: false },
+                { text: "A pena de multa extingue-se intranscendentalmente. Porém, a obrigação civil de reparar o dano passa ao filho e poderá ser executada, encontrando teto no limite do valor transferido pela herança (dezoito milhões).", correct: true }
+            ],
+            expMain: "A alternativa correta é a <strong>D</strong>. É a aplicação cirúrgica da regra do Art. 5º, XLV, CF. Sanção penal (multa) é personalíssima; morre com o condenado. A reparação civil do dano causado (obrigação de natureza extrapenal) é um efeito que passa aos sucessores e será executada apenas contra o espólio (limitada ao valor da herança transferida).",
+            expBreakdown: [
+                "<strong>A e B) Incorretas.</strong> A multa, sendo natureza penal punitiva, submete-se de forma estrita à personalidade da pena e nunca pode ser executada contra os filhos.",
+                "<strong>C) Incorreta.</strong> A vedação afasta a transmutação penal. A Constituição expressamente abriu a exceção limitadora para os deveres reparatórios patrimoniais civis."
+            ]
+        },
+        {
+            priority: "🟡 COMPLEMENTAR",
+            priorityClass: "yellow",
+            text: "Segundo a doutrina moderna (fase legislativa do Princípio da Individualização da Pena), o poder legislativo é vinculado por limites na cominação de reprimendas ao desenhar o tipo penal. O que veda o legislador e consagra a proteção da 'Intranscendência'?",
+            options: [
+                { text: "A imposição de penas que ultrapassem a pessoa do autor, não admitindo herdeiros pagando pelo crime de parente.", correct: true },
+                { text: "O impedimento absoluto de pena de banimento sob qualquer justificativa política.", correct: false },
+                { text: "A proibição de imposição de medida provisória em matéria criminal.", correct: false },
+                { text: "A aplicação da mesma quantidade de anos a todos os tipos de crimes do ordenamento.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>A</strong>. O princípio da Intranscendência (ou Personalidade) atua desde a elaboração da lei orientando o Estado que a sanção imposta não deve, em seu caráter penal, passar da pessoa do próprio condenado.",
+            expBreakdown: [
+                "<strong>B) Incorreta.</strong> O impedimento do banimento advém do princípio da <em>Humanidade</em> das Penas (Art. 5º, XLVII, CF), e não da Intranscendência.",
+                "<strong>C) Incorreta.</strong> A proibição das MPs no Direito Penal reflete o Princípio da <em>Legalidade</em> estrita.",
+                "<strong>D) Incorreta.</strong> O que rege as diferentes dosimetrias na lei é o princípio da <em>Proporcionalidade</em>."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Quais são as três fases obrigatórias que compõem o sistema constitucional tricotômico da Individualização da Pena?",
+            options: [
+                { text: "Executiva, Extrajudicial e Prisional.", correct: false },
+                { text: "Legislativa, Judicial e Executória.", correct: true },
+                { text: "Preventiva, Cautelar e Definitiva.", correct: false },
+                { text: "Retributiva, Geral Negativa e Especial Positiva.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. O Princípio da Individualização da Pena (Art. 5º, XLVI, CF) impõe um filtro triplo: o legislador cria os limites abstratos da lei (Legislativa); o juiz aplica a pena concreta na sentença (Judicial); e, por fim, os órgãos da execução gerem a progressão e regime com base no mérito (Executória).",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> Não existe fase extrajudicial de imposição de pena num Estado de Direito.",
+                "<strong>C) Incorreta.</strong> Descrevem modalidades processuais de prisão/prisões provisórias, e não fases de individualização da pena material.",
+                "<strong>D) Incorreta.</strong> Confunde as <em>teorias dos fins da pena</em> (Retribuição, Prevenção Geral e Especial) com as fases materiais da sua aplicação individualizada."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "João foi condenado a pena restritiva em primeiro grau; recorreu, e o Tribunal de Justiça confirmou integralmente sua condenação. O Ministério Público pede de imediato o início da execução provisória da pena, antes de se acionar o STJ/STF. Com as ADCs 43, 44 e 54 do STF firmadas, o pedido é:",
+            options: [
+                { text: "Deferido. Ao esgotar o segundo grau, a jurisdição fática se encerra, possibilitando o encarceramento imediato pela regra geral penal.", correct: false },
+                { text: "Indeferido. A regra da Constituição consolidada pelo STF não permite execução provisória após a condenação meramente em 2ª instância por juiz singular colegiado (presunção de inocência).", correct: true },
+                { text: "Indeferido, salvo se for demonstrado risco iminente de fuga sob as regras estritas da Soberania dos Veredictos das turmas de desembargadores.", correct: false },
+                { text: "Deferido caso se trate de crime hediondo que dispense a etapa cautelar estipulada no código de processo penal.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. A Regra Geral imposta pelo STF proíbe que se inicie o cumprimento antecipado (execução provisória) de penas enquanto houver possibilidade recursal (presunção de inocência até o trânsito em julgado).",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> Essa foi a posição jurisprudencial superada (que prevaleceu até o final de 2019). O STF atual repeliu essa possibilidade.",
+                "<strong>C) Incorreta.</strong> Soberania dos Veredictos (art. 5º, XXXVIII, c) é prerrogativa do Tribunal do Júri (popular), e não das turmas do Tribunal de Justiça (juízes togados). E risco de fuga motiva prisão preventiva cautelar, não 'execução provisória'.",
+                "<strong>D) Incorreta.</strong> O STF proíbe execução provisória de forma geral e ampla nas decisões de instâncias togadas (não ligadas ao Júri), alcançando até mesmo crimes hediondos."
+            ]
+        },
+        {
+            priority: "🔴 ALTÍSSIMA PRIORIDADE",
+            priorityClass: "red",
+            text: "Considere as recentes mudanças da Súmula 715 e Tema 1.068 do STF combinadas aos Princípios Penais Constitucionais. É correto afirmar globalmente:",
+            options: [
+                { text: "As decisões do Tribunal do Júri exigem confirmação em segunda instância e submetem-se ao limite físico prisional de cumprimento estipulado em 30 anos sem distinções.", correct: false },
+                { text: "No Júri, por sua soberania, permite-se execução antecipada (imediata) sem restrição de quantum da pena, a progressão é calculada sempre sobre o total da condenação; o teto limite na prisão física hoje fixou-se em 40 anos.", correct: true },
+                { text: "A pena, em caso de guerra declarada (fuzilamento), extingue a multa, porém a mesma é transferida aos filhos; o teto máximo na prisão será, por regra bélica, abolido das garantias fundamentais.", correct: false },
+                { text: "As decisões em 2ª instância do TRF determinam a execução provisória da pena automaticamente, calculando-se os benefícios até o máximo temporal legal de 40 anos para progressão.", correct: false }
+            ],
+            expMain: "A alternativa correta é a <strong>B</strong>. A assertiva amarra todos os temas recentes perfeitamente: o Júri permite a execução imediata (qualquer que seja o tamanho da pena - Tema 1068 STF); a progressão calcula-se pelo total da pena, ignorando o teto (Súmula 715 STF); e a Lei (Pacote Anticrime/Art 75 CP) delimitou o cumprimento de pena física no máximo em 40 anos.",
+            expBreakdown: [
+                "<strong>A) Incorreta.</strong> As decisões do Júri não exigem confirmação para início imediato; e o limite temporal da prisão hoje é de 40 anos, não 30.",
+                "<strong>C) Incorreta.</strong> A multa (sanção penal) NUNCA se transfere aos herdeiros. Aplica-se a intranscendência.",
+                "<strong>D) Incorreta.</strong> Decisões de TRF (2ª instância) não permitem execução provisória da regra geral do STF (ADCs 43,44,54). Benefícios são baseados na pena total, não no teto."
+            ]
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let hasAnswered = false;
+
+    const elQText = document.getElementById("q-text");
+    const elOptions = document.getElementById("options-container");
+    const elExpContainer = document.getElementById("explanation-container");
+    const elExpMain = document.getElementById("exp-main");
+    const elExpBreakdown = document.getElementById("exp-breakdown");
+    const elBtnNext = document.getElementById("btn-next");
+    const elCounter = document.getElementById("q-counter");
+    const elPriority = document.getElementById("q-priority");
+    const elProgressBar = document.getElementById("progress-bar");
+    const elQuizScreen = document.getElementById("quiz-screen");
+    const elResultScreen = document.getElementById("result-screen");
+
+    function initQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        elQuizScreen.style.display = "block";
+        elResultScreen.style.display = "none";
+        loadQuestion();
+    }
+
+    function updateProgress() {
+        const percentage = ((currentQuestionIndex) / questions.length) * 100;
+        elProgressBar.style.width = percentage + "%";
+    }
+
+    function loadQuestion() {
+        hasAnswered = false;
+        elExpContainer.classList.remove("show");
+        elBtnNext.classList.remove("show");
+        
+        updateProgress();
+        
+        const q = questions[currentQuestionIndex];
+        elCounter.innerText = `Questão ${currentQuestionIndex + 1} / ${questions.length}`;
+        elPriority.innerText = q.priority;
+        elPriority.className = `priority-badge ${q.priorityClass}`;
+        elQText.innerHTML = q.text;
+
+        elOptions.innerHTML = "";
+        
+        const letters = ['A', 'B', 'C', 'D'];
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            
+            const letterSpan = document.createElement("span");
+            letterSpan.className = "option-letter";
+            letterSpan.innerText = `${letters[idx]})`;
+            
+            const textSpan = document.createElement("span");
+            textSpan.innerHTML = opt.text;
+            
+            btn.appendChild(letterSpan);
+            btn.appendChild(textSpan);
+            
+            btn.onclick = () => selectOption(idx);
+            elOptions.appendChild(btn);
+        });
+    }
+
+    function selectOption(selectedIndex) {
+        if (hasAnswered) return;
+        hasAnswered = true;
+
+        const q = questions[currentQuestionIndex];
+        const buttons = elOptions.querySelectorAll(".option-btn");
+
+        buttons.forEach((btn, idx) => {
+            btn.disabled = true;
+            if (q.options[idx].correct) {
+                btn.classList.add("correct");
+            } else if (idx === selectedIndex) {
+                btn.classList.add("incorrect");
+            }
+        });
+
+        if (q.options[selectedIndex].correct) {
+            score++;
+        }
+
+        // Preencher fundamentação principal
+        elExpMain.innerHTML = q.expMain;
+
+        // Preencher breakdown das incorretas
+        elExpBreakdown.innerHTML = "";
+        q.expBreakdown.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "explanation-item";
+            div.innerHTML = item;
+            elExpBreakdown.appendChild(div);
+        });
+
+        elExpContainer.classList.add("show");
+
+        if (currentQuestionIndex === questions.length - 1) {
+            elBtnNext.innerText = "Finalizar e Ver Resultados";
+        } else {
+            elBtnNext.innerText = "Próxima Questão ➔";
+        }
+        
+        elBtnNext.classList.add("show");
+        
+        // Scroll suave para a explicação
+        setTimeout(() => {
+            elExpContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < questions.length) {
+            loadQuestion();
+            document.querySelector('.widget-container').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        elQuizScreen.style.display = "none";
+        elResultScreen.style.display = "block";
+        elProgressBar.style.width = "100%";
+
+        const percentage = Math.round((score / questions.length) * 100);
+        const elFinalScore = document.getElementById("final-score");
+        const elFinalMessage = document.getElementById("final-message");
+
+        elFinalScore.innerText = `${percentage}%`;
+
+        if (percentage >= 85) {
+            elFinalScore.style.color = "var(--correct-border)";
+            elFinalMessage.innerText = `Excepcional! Você acertou ${score} de ${questions.length}. Domínio claro das Teses do STF e Princípios Constitucionais.`;
+        } else if (percentage >= 60) {
+            elFinalScore.style.color = "#dd6b20";
+            elFinalMessage.innerText = `Bom resultado! Você acertou ${score} de ${questions.length}. Mas vale revisar atentamente as exceções da Execução Provisória (Júri) e Limites da Pena.`;
+        } else {
+            elFinalScore.style.color = "var(--incorrect-border)";
+            elFinalMessage.innerText = `Você acertou ${score} de ${questions.length}. Necessário revisar com foco no Tema 1068, Súmula 715 e Teorias da Pena. Leia o Resumo Estratégico.`;
+        }
+        document.querySelector('.widget-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function restartQuiz() {
+        initQuiz();
+        document.querySelector('.widget-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onload = initQuiz;
+</script>
+
+</body>
+</html>
