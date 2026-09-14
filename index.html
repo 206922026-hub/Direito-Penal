@@ -1,442 +1,736 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Widget Interativo de Estudo - LEP</title>
-<style>
-    :root {
-        --primary: #2C3E50;
-        --secondary: #34495E;
-        --accent: #3498DB;
-        --success: #27AE60;
-        --error: #E74C3C;
-        --bg-color: #ECF0F1;
-        --text-color: #333;
-        --card-bg: #FFFFFF;
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    
-    body { background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; padding: 20px; }
-    
-    .widget-container {
-        background-color: var(--card-bg); width: 100%; max-width: 800px;
-        border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); overflow: hidden;
-    }
-    
-    .header { background-color: var(--primary); color: white; padding: 20px; text-align: center; }
-    .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
-    .header p { font-size: 0.9rem; opacity: 0.8; }
-    
-    .progress-bar { width: 100%; background-color: #e0e0e0; height: 6px; }
-    .progress-fill { background-color: var(--accent); height: 100%; width: 0%; transition: width 0.3s; }
-    
-    .content { padding: 30px 20px; }
-    
-    .status-row { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 20px; font-size: 0.9rem; color: var(--secondary); }
-    
-    .question-text { font-size: 1.2rem; font-weight: 600; margin-bottom: 25px; line-height: 1.5; color: var(--primary); }
-    
-    .options-container { display: flex; flex-direction: column; gap: 12px; }
-    
-    .option {
-        background-color: var(--bg-color); border: 2px solid transparent; border-radius: 8px;
-        padding: 15px; cursor: pointer; transition: all 0.2s; font-size: 1rem; line-height: 1.4;
-    }
-    .option:hover:not(.disabled) { background-color: #D6DBDF; }
-    
-    .option.disabled { cursor: not-allowed; }
-    .option.selected-correct { border-color: var(--success); background-color: #EAFAF1; }
-    .option.selected-incorrect { border-color: var(--error); background-color: #FDEDEC; }
-    .option.show-correct { border-color: var(--success); background-color: #EAFAF1; }
-    
-    .feedback-container {
-        margin-top: 25px; padding: 20px; border-radius: 8px; display: none;
-        background-color: #F8F9F9; border-left: 5px solid var(--accent);
-    }
-    .feedback-container h3 { margin-bottom: 10px; font-size: 1.1rem; }
-    .feedback-item { margin-bottom: 12px; font-size: 0.95rem; line-height: 1.5; padding-bottom: 12px; border-bottom: 1px solid #E5E8E8; }
-    .feedback-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-    .badge { padding: 3px 6px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; color: white; margin-right: 8px; display: inline-block; width: 25px; text-align: center; }
-    .badge-v { background-color: var(--success); }
-    .badge-f { background-color: var(--error); }
-    
-    .btn-next {
-        display: none; width: 100%; padding: 15px; margin-top: 25px;
-        background-color: var(--accent); color: white; border: none;
-        border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
-        transition: background 0.2s;
-    }
-    .btn-next:hover { background-color: #2980B9; }
-    
-    .result-screen { display: none; text-align: center; padding: 40px 20px; }
-    .result-screen h2 { font-size: 2rem; color: var(--primary); margin-bottom: 15px; }
-    .result-screen p { font-size: 1.2rem; margin-bottom: 25px; }
-    .btn-restart { background-color: var(--success); padding: 15px 30px; color: white; border: none; border-radius: 8px; font-size: 1.1rem; cursor: pointer; font-weight: bold; }
-    
-    @media (max-width: 600px) {
-        .content { padding: 20px 15px; }
-        .question-text { font-size: 1.1rem; }
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Interativo de Questões - Sursis Penal e Processual</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --correct-bg: #064e3b;
+            --correct-border: #10b981;
+            --correct-text: #a7f3d0;
+            --incorrect-bg: #7f1d1d;
+            --incorrect-border: #ef4444;
+            --incorrect-text: #fecaca;
+            --accent: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            color: #60a5fa;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--card-border);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .question-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            transition: border-color 0.2s;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 10px;
+        }
+
+        .question-num {
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .question-topic {
+            font-size: 0.8rem;
+            background: #334155;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #cbd5e1;
+        }
+
+        .statement {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            white-space: pre-line;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 14px 18px;
+            border-radius: 8px;
+            text-align: left;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.4;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background: #1e293b;
+            border-color: var(--primary);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        .option-letter {
+            font-weight: bold;
+            background: var(--card-border);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+            font-size: 0.85rem;
+        }
+
+        /* Classes de feedback */
+        .option-btn.selected-correct {
+            background-color: var(--correct-bg);
+            border-color: var(--correct-border);
+            color: var(--correct-text);
+        }
+
+        .option-btn.selected-correct .option-letter {
+            background-color: var(--correct-border);
+            color: #042f2e;
+        }
+
+        .option-btn.selected-incorrect {
+            background-color: var(--incorrect-bg);
+            border-color: var(--incorrect-border);
+            color: var(--incorrect-text);
+        }
+
+        .option-btn.selected-incorrect .option-letter {
+            background-color: var(--incorrect-border);
+            color: #450a0a;
+        }
+
+        .option-btn.show-correct-target {
+            border: 2px dashed var(--correct-border);
+        }
+
+        /* Explicação */
+        .explanation {
+            display: none;
+            background: #0f172a;
+            border-left: 4px solid var(--primary);
+            padding: 18px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .explanation.visible {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .explanation h4 {
+            color: #60a5fa;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .explanation .correct-reason {
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--card-border);
+            color: #a7f3d0;
+        }
+
+        .explanation .incorrect-reasons h5 {
+            color: var(--accent);
+            margin: 10px 0 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .explanation .incorrect-reasons ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .explanation .incorrect-reasons li {
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+
+        .explanation .incorrect-reasons li strong {
+            color: #fca5a5;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 <body>
 
-<div class="widget-container">
-    <div class="header">
-        <h1>Simulado: Lei de Execução Penal</h1>
-        <p>Nível Avançado - Baseado em Jurisprudências e Atualizações (Leis 14.843/24 e 14.994/24)</p>
+<div class="container">
+    <header>
+        <h1>Simulado Interativo Avançado</h1>
+        <p>Tema: Suspensão Condicional da Pena (Sursis Penal) & Sursis Processual</p>
+    </header>
+
+    <div class="stats-bar">
+        <div>Respondidas: <span id="answered-count" class="badge">0 / 20</span></div>
+        <div>Acertos: <span id="score" class="badge" style="background: var(--correct-border);">0</span></div>
     </div>
-    
-    <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill"></div>
-    </div>
-    
-    <div class="content" id="quiz-content">
-        <div class="status-row">
-            <span id="q-counter">Questão 1 de 20</span>
-            <span id="score-counter">Acertos: 0</span>
-        </div>
-        
-        <div class="question-text" id="question-text">Carregando questão...</div>
-        
-        <div class="options-container" id="options-container">
-            <!-- Options generated by JS -->
-        </div>
-        
-        <div class="feedback-container" id="feedback-container">
-            <h3 id="feedback-title">Justificativas:</h3>
-            <div id="feedback-content">
-                <!-- Feedback generated by JS -->
-            </div>
-        </div>
-        
-        <button class="btn-next" id="btn-next">Próxima Questão</button>
-    </div>
-    
-    <div class="result-screen" id="result-screen">
-        <h2>Simulado Concluído!</h2>
-        <p id="final-score">Você acertou X de 20 questões.</p>
-        <button class="btn-restart" id="btn-restart">Refazer Simulado</button>
-    </div>
+
+    <div id="quiz-container"></div>
 </div>
 
 <script>
 const quizData = [
     {
-        question: "Sobre a aplicação da Lei de Execução Penal (LEP) e sua natureza jurídica, assinale a alternativa correta:",
+        id: 1,
+        topic: "Conceito & Sistemas Penais",
+        statement: "No que concerne aos sistemas e à natureza jurídica do sursis penal, assinale a afirmativa correta:",
         options: [
-            { id: "A", text: "Aplica-se aos presos provisórios, garantindo-se a execução provisória da pena após acórdão de 2ª instância.", correct: false, rationale: "O material destaca expressamente que NÃO há execução provisória da pena no Brasil (ADCs 43, 44 e 54/STF)." },
-            { id: "B", text: "Não se aplica aos condenados pela Justiça Eleitoral, os quais possuem regramento próprio em presídios eleitorais.", correct: false, rationale: "O texto afirma que a LEP aplica-se ao condenado pela Justiça Eleitoral ou Militar recolhido a estabelecimento sujeito à jurisdição ordinária." },
-            { id: "C", text: "Aplica-se aos presos provisórios, assegurando direitos básicos, mas a doutrina reconhece natureza mista da execução penal, envolvendo atos jurisdicionais e administrativos.", correct: true, rationale: "Exatamente o disposto no material base: aplica-se no que couber ao preso provisório, e sua natureza é mista (ou complexa)." },
-            { id: "D", text: "A execução penal tem natureza exclusivamente administrativa, a cargo do Poder Executivo.", correct: false, rationale: "A doutrina majoritária reconhece a natureza mista (jurisdicional e administrativa)." }
-        ]
+            { id: "A", text: "O Brasil adotou o Sistema Anglo-Americano (Probation System), no qual o juiz suspende o pronunciamento da sentença condenatória." },
+            { id: "B", text: "Trata-se de uma faculdade discricionária do juiz, não constituindo direito subjetivo do réu ainda que preenchidos os requisitos." },
+            { id: "C", text: "O Brasil adotou o Sistema Franco-Belga para o sursis penal, no qual há prolação da sentença e imposição da pena, suspendendo-se sua execução." },
+            { id: "D", text: "O sursis processual (art. 89 da Lei 9.099/95) é idêntico ao sistema franco-belga, pois pressupõe sentença condenatória transitada em julgado." }
+        ],
+        correct: "C",
+        reasonCorrect: "No Brasil, adota-se o Sistema Franco-Belga para o sursis penal (art. 77 do CP): o réu é processado, condenado e a pena privativa de liberdade é fixada, ficando apenas a sua execução suspensa durante o período de prova.",
+        reasonsIncorrect: {
+            "A": "Incorreta. O Sistema Anglo-Americano suspende o próprio julgamento/sentença. O Brasil adotou o sistema Franco-Belga no CP.",
+            "B": "Incorreta. O sursis é direito público subjetivo do condenado, devendo ser concedido desde que preenchidos todos os requisitos legais (Art. 157 da LEP).",
+            "D": "Incorreta. O sursis processual (Lei 9.099/95) inspira-se no Probation of First Offender Act, ocorrendo ANTES da instrução e sem prolacão de sentença condenatória."
+        }
     },
     {
-        question: "Com base nas novidades legislativas recentes (Pacote Anticrime e Lei 14.994/24) sobre competência e processo de execução, assinale a opção correta:",
+        id: 2,
+        topic: "Requisitos Objetivos & Subjetivos",
+        statement: "Considere que João foi condenado à pena privativa de liberdade de 1 ano e 8 meses de reclusão. Sobre os requisitos para a concessão do sursis (art. 77 do CP), analise as afirmativas:
+
+I. Se a pena privativa de liberdade puder ser substituída por pena restritiva de direitos (art. 44, CP), o sursis não será aplicável em razão do seu caráter subsidiário.
+II. A reincidência em crime culposo impede expressamente a concessão do sursis penal.
+III. Condenação anterior à pena de multa isolada não impede a concessão do sursis.
+
+Está correto o que se afirma em:",
         options: [
-            { id: "A", text: "A multa penal passou a ser executada na Vara da Fazenda Pública pela Procuradoria do Estado.", correct: false, rationale: "A multa passou a ser executada na Vara de Execução Penal como dívida de valor, com legitimidade exclusiva do Ministério Público." },
-            { id: "B", text: "Permite-se a transferência de condenados por violência doméstica contra a mulher para estabelecimento distante da vítima, caso existam ameaças.", correct: true, rationale: "Regra expressa da Lei 14.994/24 constante no material, permitindo transferência inclusive para outro Estado ou presídio federal." },
-            { id: "C", text: "A competência territorial da execução é fixada permanentemente pelo local do juízo que proferiu a condenação.", correct: false, rationale: "A competência territorial 'vai atrás' do preso, definida pelo local onde ele estiver preso ou internado." },
-            { id: "D", text: "Compete à Justiça Federal a execução de pena imposta por ela, mesmo que o preso seja recolhido a presídio estadual.", correct: false, rationale: "A Súmula 192/STJ define que compete ao juízo estadual a execução nestes casos." }
-        ]
+            { id: "A", text: "I, apenas." },
+            { id: "B", text: "I e III, apenas." },
+            { id: "C", text: "II e III, apenas." },
+            { id: "D", text: "I, II e III." }
+        ],
+        correct: "B",
+        reasonCorrect: "A afirmativa I está correta (o sursis tem caráter subsidiário à substituição por PRD, nos termos do art. 77, III, CP). A afirmativa III está correta, pois a vedação do art. 77, I, CP aplica-se apenas à reincidência em crime doloso; a condenação anterior a multa não impede a concessão (§ 1º do art. 77).",
+        reasonsIncorrect: {
+            "A": "Incorreta. A afirmativa III também está correta.",
+            "C": "Incorreta. A afirmativa II está errada, pois a reincidência em crime CULPOSO NÃO impede o sursis.",
+            "D": "Incorreta. A afirmativa II é falsa."
+        }
     },
     {
-        question: "Em relação aos direitos e deveres do preso e as disposições recentes, é correto afirmar:",
+        id: 3,
+        topic: "Espécies de Sursis",
+        statement: "Geraldo, com 73 anos de idade na data da prolação da sentença, foi condenado à pena privativa de liberdade de 3 anos e 6 meses de reclusão por crime doloso. Preenchidos os requisitos subjetivos favoráveis e verificada a impossibilidade de substituição por pena restritiva de direitos, o juiz poderá conceder o sursis:",
         options: [
-            { id: "A", text: "O rol de deveres e o rol de direitos do preso são taxativos (numerus clausus).", correct: false, rationale: "O rol de deveres é taxativo, mas o de direitos é exemplificativo (numerus apertus)." },
-            { id: "B", text: "O trabalho do preso é remunerado e regido pelas normas da Consolidação das Leis do Trabalho (CLT).", correct: false, rationale: "O material afirma que o trabalho não é inferior a 3/4 do salário-mínimo, SEM vínculo CLT." },
-            { id: "C", text: "O condenado por crime contra a mulher por razões da condição do sexo feminino não poderá usufruir da visita íntima ou conjugal.", correct: true, rationale: "Regra direta da Lei 14.994/24 listada nas exceções sobre visitas." },
-            { id: "D", text: "A restrição de direitos do preso pode ser feita por ato discricionário exclusivo do diretor do presídio.", correct: false, rationale: "A Lei 14.994/24 estabelece a Garantia de Jurisdicionalidade: a suspensão/restrição deve ser feita por ato motivado do Juiz." }
-        ]
+            { id: "A", text: "Simples, com período de prova de 2 a 4 anos." },
+            { id: "B", text: "Especial, com período de prova de 2 a 4 anos." },
+            { id: "C", text: "Etário, com período de prova de 4 a 6 anos." },
+            { id: "D", text: "Humanitário, com período de prova de 2 a 4 anos." }
+        ],
+        correct: "C",
+        reasonCorrect: "O sursis etário (art. 77, § 2º, CP) permite a suspensão da pena privativa de liberdade superior a 2 anos e não superior a 4 anos se o condenado for maior de 70 anos na data da sentença. Nesses casos (pena > 2 anos), o período de prova é de 4 a 6 anos.",
+        reasonsIncorrect: {
+            "A": "Incorreta. O sursis simples limita-se a penas não superiores a 2 anos (período de prova de 2 a 4 anos).",
+            "B": "Incorreta. O sursis especial também exige pena fixada até 2 anos.",
+            "D": "Incorreta. O sursis humanitário aplica-se por razões de saúde e, quando a pena for entre 2 e 4 anos, seu período de prova também será de 4 a 6 anos."
+        }
     },
     {
-        question: "Segundo a LEP e a jurisprudência sumulada do STJ em relação à disciplina penitenciária, configura falta grave:",
+        id: 4,
+        topic: "Condições Legais (Simples vs. Especial)",
+        statement: "Maria, Delegada de Polícia, concluiu inquérito policial, remetendo-o ao Ministério Público, com o indiciamento de Carlos pela prática de crime no contexto da Lei Maria da Penha.
+Recebida a denúncia pelo juízo competente, o advogado constituído pelo acusado lhe afirmou que, em caso de condenação, consideradas as circunstâncias do caso apresentado, possivelmente haverá a suspensão condicional da pena.
+De acordo com a narrativa e considerando as disposições do Código Penal, analise as afirmativas a seguir.
+
+I. No primeiro ano do prazo, deverá o condenado prestar serviços à comunidade ou submeter-se à limitação de fim de semana. Contudo, se o agente houver reparado o dano, salvo impossibilidade de fazê-lo, e se as circunstâncias judiciais lhe forem inteiramente favoráveis, o Juiz poderá substituir a referida exigência pelas seguintes condições, aplicadas cumulativa ou alternativamente: proibição de frequentar determinados lugares; proibição de ausentar-se da comarca em que reside sem autorização do Juiz; comparecimento pessoal e obrigatório a Juízo, mensalmente, para informar e justificar suas atividades.
+II. A sentença poderá especificar outras condições a que fica subordinada a suspensão, desde que adequadas ao fato e à situação pessoal do condenado.
+III. A suspensão será revogada se, no curso do período de prova, o beneficiário for condenado, em sentença irrecorrível, por crime doloso ou culposo, facultando-se a revogação do benefício em caso de condenação irrecorrível por contravenção penal.
+
+Nesse cenário, considerando as disposições do Código Penal, está correto o que se afirma em:",
         options: [
-            { id: "A", text: "A fuga, a recusa justificada ao trabalho imposto e o uso de celular.", correct: false, rationale: "A recusa ao trabalho que configura falta grave é a recusa INJUSTIFICADA (HC 262.989/STJ)." },
-            { id: "B", text: "Apenas a posse do aparelho celular íntegro e periciado, sendo atípica a posse exclusiva de chip.", correct: false, rationale: "Súmula 660/STJ: a simples posse de componentes (chip, fone) configura falta, e a Súmula 661/STJ dispensa perícia." },
-            { id: "C", text: "A simples posse de uma bateria de celular ou fone de ouvido na cela, independentemente de perícia do aparelho.", correct: true, rationale: "Conforme Súmulas 660 e 661/STJ referenciadas no material de apoio." },
-            { id: "D", text: "O descumprimento das condições do regime fechado, sendo atípico para regime aberto ou PRD.", correct: false, rationale: "O descumprimento das condições do regime aberto ou da PRD (Art. 51) configura falta grave." }
-        ]
+            { id: "A", text: "I, apenas." },
+            { id: "B", text: "II, apenas." },
+            { id: "C", text: "III, apenas." },
+            { id: "D", text: "I e II, apenas." }
+        ],
+        correct: "D",
+        reasonCorrect: "As afirmativas I e II estão corretas (reproduzem fielmente o art. 78, §§ 1º e 2º, e o art. 79 do CP). A afirmativa III está errada porque a condenação por crime CULPOSO gera revogação FACULTATIVA, e não obrigatória.",
+        reasonsIncorrect: {
+            "A": "Incorreta. A afirmativa II também está correta nos termos do art. 79 do CP.",
+            "B": "Incorreta. A afirmativa I também está correta nos termos do art. 78, §§ 1º e 2º do CP.",
+            "C": "Incorreta. A afirmativa III confunde as causas de revogação obrigatória e facultativa. Crime culposo enseja revogação facultativa (art. 81, § 1º, CP)."
+        }
     },
     {
-        question: "O cometimento de falta grave gera severas consequências ao apenado. Assinale a alternativa que descreve corretamente um de seus efeitos:",
+        id: 5,
+        topic: "Direitos Indisponíveis & Condições Judiciais",
+        statement: "Ao conceder o sursis penal a um sentenciado, o magistrado fixou, como condição judicial substitutiva/adicional (art. 79 do CP), a obrigação de o condenado realizar doação de sangue quadrimestral e de não portar armas de fogo. À luz da jurisprudência e da doutrina penal, tais condições impostas são:",
         options: [
-            { id: "A", text: "Interrompe o prazo para a obtenção de Livramento Condicional, Indulto e Progressão de Regime.", correct: false, rationale: "Interrompe apenas a Progressão de Regime (Súm. 534). NÃO interrompe Livramento (Súm. 441) nem Indulto (Súm. 535)." },
-            { id: "B", text: "Gera a perda integral dos dias remidos anteriormente pelo trabalho ou estudo.", correct: false, rationale: "Gera a perda de ATÉ 1/3 dos dias remidos, cabendo ao juiz motivar o patamar (Súmula Vinculante 9/STF)." },
-            { id: "C", text: "Zera a contagem (interrompe o prazo) exclusivamente para o benefício de Progressão de Regime.", correct: true, rationale: "Conforme Súmula 534/STJ e as vedações de interrupção para os demais institutos no material." },
-            { id: "D", text: "O diretor do presídio pode aplicar a perda de dias remidos sem necessidade de manifestação judicial.", correct: false, rationale: "A perda exige decisão fundamentada do juiz, que tem discricionariedade limitada a 1/3." }
-        ]
+            { id: "A", text: "Válidas, pois o art. 79 concede ampla margem de discricionariedade ao juiz." },
+            { id: "B", text: "Inválidas, pois a doação de sangue é ilícita por violar direito indisponível à integridade física, e a proibição de portar armas é condição ociosa/redundante, já imposta pela lei penal geral." },
+            { id: "C", text: "Válidas apenas no tocante à doação de sangue, por seu relevante caráter social." },
+            { id: "D", text: "Inválidas apenas em relação ao porte de armas, sendo a doação de sangue perfeitamente admissível." }
+        ],
+        correct: "B",
+        reasonCorrect: "Condições judiciais (art. 79, CP) não podem violar direitos indisponíveis (como a integridade física/corpo na doação de sangue forçada) e nem constituir obrigações ociosas/redundantes (proibição de condutas que já são deveres legais gerais).",
+        reasonsIncorrect: {
+            "A": "Incorreta. A discricionariedade do art. 79 do CP encontra limites nos direitos fundamentais e no princípio da legalidade.",
+            "C": "Incorreta. O corpo humano é bem indisponível, não podendo ser objeto de coerção estatal judicial como condição de sursis.",
+            "D": "Incorreta. Ambas as condições fixadas extrapolam os limites legais e doutrinários do art. 79 do CP."
+        }
     },
     {
-        question: "Sobre o Procedimento Administrativo Disciplinar (PAD) para apuração de faltas, é correto afirmar com base na jurisprudência do STF:",
+        id: 6,
+        topic: "Reincidência e Cumulação de Institutos",
+        statement: "Finda a instrução processual penal, Matheus, reincidente em crime culposo, foi condenado pela prática de determinada infração penal às penas finais de três anos de reclusão, sendo certo que a culpabilidade, os antecedentes, a conduta social e a personalidade do agente, bem como os motivos e as circunstâncias, lhe são benéficos. Constata-se, ainda, não ser cabível a substituição da pena privativa de liberdade por pena restritiva de direitos e que o condenado, que respondeu ao processo em liberdade, possui setenta e dois anos de idade.
+Nesse cenário, considerando as disposições do Código Penal, é correto afirmar que Matheus:",
         options: [
-            { id: "A", text: "O PAD é indispensável e absoluto, não podendo ser suprido por qualquer outro ato processual.", correct: false, rationale: "Segundo o Tema 941/STF, a oitiva do preso pelo Juiz supre a ausência do PAD." },
-            { id: "B", text: "A oitiva do preso pelo Juiz em audiência de justificação, com advogado e MP, supre a ausência do PAD.", correct: true, rationale: "Essa é a redação exata do entendimento do Tema 941/STF listado no material." },
-            { id: "C", text: "As faltas médias e leves, assim como as graves, exigem PAD definido exclusivamente pela LEP.", correct: false, rationale: "As faltas leves e médias são definidas pela legislação local, não exclusivamente pela LEP." },
-            { id: "D", text: "A falta grave dispensa ampla defesa se comprovada por flagrante no interior da cela.", correct: false, rationale: "O PAD (ou a audiência de justificação em juízo) é exigido para aplicar a sanção de falta grave." }
-        ]
+            { id: "A", text: "poderá ser beneficiado com a suspensão condicional da pena e com o livramento condicional, devendo optar, por intermédio do seu advogado, pela aplicabilidade de um dos institutos." },
+            { id: "B", text: "não tem direito à suspensão condicional da pena, tampouco ao livramento condicional, em razão do quantitativo da pena que lhe foi imposta." },
+            { id: "C", text: "não tem direito à suspensão condicional da pena, tampouco ao livramento condicional, por ser reincidente em crime culposo." },
+            { id: "D", text: "poderá ser beneficiado com a suspensão condicional da pena." }
+        ],
+        correct: "D",
+        reasonCorrect: "Matheus tem 72 anos (maior de 70), a pena aplicada foi de 3 anos (cabe no Sursis Etário, cujo limite é de 4 anos) e a reincidência em crime CULPOSO não impede o sursis. Portanto, ele preenche todos os requisitos para ser beneficiado com a suspensão condicional da pena.",
+        reasonsIncorrect: {
+            "A": "Incorreta. O livramento condicional exige o cumprimento prévio de parcela da pena cumprida em estabelecimento prisional; não há direito a 'opção prévia' em liberdade sem início de execução da pena.",
+            "B": "Incorreta. A pena de 3 anos é compatível com o Sursis Etário (art. 77, § 2º, CP).",
+            "C": "Incorreta. Reincidência em crime culposo não obsta o sursis (art. 77, I, CP)."
+        }
     },
     {
-        question: "A Lei 14.843/24 trouxe profunda alteração nos requisitos para a Progressão de Regime. Segundo as novas regras, o Exame Criminológico:",
+        id: 7,
+        topic: "Prazos do Período de Prova",
+        statement: "Assinale a alternativa que apresenta a correlação CORRETA entre a hipótese legal e o respectivo período de prova do Sursis Penal:",
         options: [
-            { id: "A", text: "Tornou-se obrigatório para todos os casos de progressão, superando o entendimento anterior da Súmula 439/STJ.", correct: true, rationale: "O material destaca como mudança crítica: o exame criminológico passou a ser obrigatório para todos os casos de progressão." },
-            { id: "B", text: "Permanece facultativo, necessitando de decisão fundamentada do juiz da execução (Súmula 439/STJ).", correct: false, rationale: "A Súmula 439/STJ foi superada para fatos posteriores à Lei 14.843/24." },
-            { id: "C", text: "É obrigatório apenas para condenados por crimes hediondos com resultado morte.", correct: false, rationale: "A obrigatoriedade se estende a todos os casos de progressão, não se limitando aos hediondos." },
-            { id: "D", text: "Quando favorável, autoriza a progressão de regime 'por saltos' (do fechado direto para o aberto).", correct: false, rationale: "O STJ veda expressamente a progressão por saltos (Súmula 491/STJ)." }
-        ]
+            { id: "A", text: "Sursis Simples com pena de 1 ano e 6 meses: Período de prova de 1 a 3 anos." },
+            { id: "B", text: "Sursis Etário com pena fixada em 3 anos: Período de prova de 4 a 6 anos." },
+            { id: "C", text: "Sursis em Contravenções Penais (LCP): Período de prova fixo de 2 a 4 anos." },
+            { id: "D", text: "Sursis Humanitário com pena de 1 ano e 8 meses: Período de prova obrigatório de 4 a 6 anos." }
+        ],
+        correct: "B",
+        reasonCorrect: "No Sursis Etário e Humanitário, quando a pena aplicada for superior a 2 anos (até limite de 4 anos), o período de prova é de 4 a 6 anos (art. 77, § 2º, c/c art. 77, caput, CP).",
+        reasonsIncorrect: {
+            "A": "Incorreta. Na regra geral (Simples/Especial), o período de prova é de 2 a 4 anos (art. 77, caput, CP).",
+            "C": "Incorreta. Nas contravenções penais, o período de prova é de 1 a 3 anos (art. 11 da LCP).",
+            "D": "Incorreta. Se a pena fixada for de até 2 anos no etário/humanitário, o período de prova volta para a regra geral de 2 a 4 anos."
+        }
     },
     {
-        question: "João é reincidente específico na prática de crime hediondo COM resultado morte. Segundo o Pacote Anticrime, qual fração de pena deverá cumprir para progredir de regime?",
+        id: 8,
+        topic: "Revogação Obrigatória",
+        statement: "O Código Penal disciplina em seu artigo 81 as hipóteses de revogação do sursis. Constitui causa de revogação OBRIGATÓRIA da suspensão condicional da pena:",
         options: [
-            { id: "A", text: "40%", correct: false, rationale: "40% é a fração para hediondo sem morte (Primário)." },
-            { id: "B", text: "50%", correct: false, rationale: "50% é para comando de org. criminosa ou hediondo com morte primário." },
-            { id: "C", text: "60%", correct: false, rationale: "60% aplica-se a reincidente específico em crime hediondo SEM resultado morte." },
-            { id: "D", text: "70%", correct: true, rationale: "Conforme a tabela de progressão do material, Hediondo COM morte (Reincidente específico) exige 70%." }
-        ]
+            { id: "A", text: "A condenação irrecorrível por crime culposo à pena restritiva de direitos." },
+            { id: "B", text: "O descumprimento injustificado das condições do Sursis Especial (art. 78, § 2º, CP)." },
+            { id: "C", text: "O descumprimento injustificado da prestação de serviços à comunidade (condição do Sursis Simples)." },
+            { id: "D", text: "A condenação irrecorrível por contravenção penal à pena de multa." }
+        ],
+        correct: "C",
+        reasonCorrect: "O descumprimento das condições do Sursis Simples (art. 78, § 1º, CP: prestação de serviços à comunidade ou limitação de fim de semana) acarreta revogação OBRIGATÓRIA (art. 81, III, CP).",
+        reasonsIncorrect: {
+            "A": "Incorreta. Condenação irrecorrível por crime culposo é causa de revogação FACULTATIVA (art. 81, § 1º, CP).",
+            "B": "Incorreta. O descumprimento das condições do Sursis ESPECIAL (assinar carteirinha, proibições de locais) é causa de revogação FACULTATIVA (art. 81, § 1º, CP).",
+            "D": "Incorreta. Condenação por contravenção penal enseja revogação FACULTATIVA. Além disso, condenação à pena de multa isolada jamais revoga o sursis."
+        }
     },
     {
-        question: "Joana, mãe de criança menor, é condenada primária por crime praticado sem violência ou grave ameaça e não integra facção criminosa. De acordo com a LEP (Lei 13.769/18), sua progressão ocorrerá após cumprimento de:",
+        id: 9,
+        topic: "Revogação Facultativa",
+        statement: "Sobre as causas de revogação facultativa da suspensão condicional da pena (art. 81, § 1º, CP), assinale a afirmativa INCORRETA:",
         options: [
-            { id: "A", text: "16% da pena.", correct: false, rationale: "Essa seria a regra geral para primário sem violência, mas mães nas condições descritas possuem regra especial." },
-            { id: "B", text: "1/8 da pena.", correct: true, rationale: "O material alerta para prova: gestantes ou mães progridem com 1/8 desde que primárias, sem violência, sem crime contra o filho e sem elo com facção." },
-            { id: "C", text: "25% da pena.", correct: false, rationale: "25% aplica-se a primário com crime envolvendo violência ou grave ameaça." },
-            { id: "D", text: "1/6 da pena.", correct: false, rationale: "Essa fração era a regra antiga geral e hoje é usada como limite de tempo para saídas temporárias (primários), mas não para a progressão especial de mães." }
-        ]
+            { id: "A", text: "O juiz pode optar por prorrogar o período de prova até o limite máximo, em vez de revogar o benefício." },
+            { id: "B", text: "A condenação irrecorrível por crime culposo a pena privativa de liberdade enseja revogação facultativa." },
+            { id: "C", text: "O descumprimento injustificado de condição judicial imposta pelo juiz na sentença enseja revogação facultativa." },
+            { id: "D", text: "A superveniência de condenação irrecorrível por pena de multa isolada é causa expressa de revogação facultativa." }
+        ],
+        correct: "D",
+        reasonCorrect: "A condenação irrecorrível à pena de MULTA ISOLADA NÃO gera revogação nem obrigatória nem facultativa do sursis penal. A pegadinha é clássica em bancas de concurso público.",
+        reasonsIncorrect: {
+            "A": "Incorreta como resposta (pois o enunciado pede a incorreta). De fato, o juiz pode prorrogar o período de prova no lugar da revogação facultativa (art. 81, § 3º).",
+            "B": "Incorreta como resposta. A condenação irrecorrível por crime culposo é hipótese legítima de revogação facultativa.",
+            "C": "Incorreta como resposta. Descumprir condição judicial imposta (art. 79) autoriza a revogação facultativa."
+        }
     },
     {
-        question: "Sobre as Autorizações de Saída (Permissão de Saída vs. Saída Temporária), é correto afirmar que:",
+        id: 10,
+        topic: "Frustração de Pena de Multa",
+        statement: "Durante o período de prova de seu sursis penal, Marcos deixa injustificadamente de efetuar o pagamento da pena de multa cumulativamente aplicada na condenação, embora seja comprovadamente solvente e possua recursos financeiros suficientes. Nessa situação, o juiz da execução penal:",
         options: [
-            { id: "A", text: "Ambas exigem escolta policial obrigatória contínua.", correct: false, rationale: "Saída temporária é SEM vigilância direta (podendo usar tornozeleira). Apenas permissão de saída tem escolta sempre." },
-            { id: "B", text: "A saída temporária é concedida pelo Juiz da Execução para visitas à família, sendo admissível no regime fechado e semiaberto.", correct: false, rationale: "Saída temporária é cabível APENAS no regime semiaberto." },
-            { id: "C", text: "A permissão de saída é autorizada pelo Diretor do Estabelecimento, mediante escolta, por motivo de falecimento/doença de familiar ou tratamento médico.", correct: true, rationale: "Exatamente as características listadas na tabela do material para Permissão de Saída (Art. 120 LEP)." },
-            { id: "D", text: "A saída temporária não exige cumprimento mínimo de tempo de pena, diferentemente da permissão de saída.", correct: false, rationale: "É o inverso: saída temporária exige 1/6 (primário) ou 1/4 (reincidente), enquanto a permissão não exige tempo mínimo." }
-        ]
+            { id: "A", text: "Deverá obrigatoriamente revogar o sursis penal." },
+            { id: "B", text: "Poderá facultativamente revogar o sursis ou prorrogar o prazo de prova." },
+            { id: "C", text: "Não poderá tomar nenhuma providência quanto ao sursis, devendo o Ministério Público apenas executar a dívida de valor." },
+            { id: "D", text: "Deverá converter a pena de multa em pena privativa de liberdade." }
+        ],
+        correct: "A",
+        reasonCorrect: "Nos termos do art. 81, II, do CP, se o frustrar injustificadamente a execução da pena de multa (sendo solvente), a revogação do sursis é OBRIGATÓRIA.",
+        reasonsIncorrect: {
+            "B": "Incorreta. Frustrar o pagamento da multa tendo recursos é causa OBRIGATÓRIA e não facultativa.",
+            "C": "Incorreta. Além da cobrança/execução da dívida de valor, há o efeito reflexo direto no sursis penal (revogação).",
+            "D": "Incorreta. A pena de multa não pode ser convertida em prisão no direito penal brasileiro pós-Lei 9.268/96."
+        }
     },
     {
-        question: "A Lei 14.843/24 alterou profundamente a sistemática da Saída Temporária. Assinale a regra atual, de acordo com o material:",
+        id: 11,
+        topic: "Prorrogação do Período de Prova",
+        statement: "No curso do período de prova de um sursis penal com duração de 2 anos, o beneficiário passa a responder a uma nova ação penal pela suposta prática de um crime de furto simples cometido durante a vigência do benefício. O prazo de prova do sursis expira antes do julgamento dessa nova ação penal. Diante disso, assinale a opção correta:",
         options: [
-            { id: "A", text: "O condenado passou a ter direito incondicional a 5 saídas de 7 dias ao ano.", correct: false, rationale: "A regra de '5 saídas de 7 dias' foi expressamente revogada. O juiz define a duração exata agora." },
-            { id: "B", text: "É expressamente VEDADA a saída temporária para condenados por crimes hediondos ou praticados com violência/grave ameaça contra a pessoa.", correct: true, rationale: "Essa é a mudança crítica apontada no material (Lei 14.843/24)." },
-            { id: "C", text: "A saída temporária exige, em todos os casos, autorização do Diretor do Presídio e manifestação do Ministério Público.", correct: false, rationale: "A autorização da saída temporária é do Juiz da Execução, não do Diretor." },
-            { id: "D", text: "Estar no regime semiaberto garante ao condenado o direito automático à saída temporária.", correct: false, rationale: "O STF firmou tese de que estar no semiaberto não dá direito automático (HC 102.773)." }
-        ]
+            { id: "A", text: "O juiz deve declarar extinta a pena privativa de liberdade, pois o período de prova decorreu sem revogação prévia." },
+            { id: "B", text: "O período de prova é prorrogado automaticamente até o julgamento definitivo do novo processo, independentemente de despacho judicial." },
+            { id: "C", text: "Haverá revogação obrigatória imediata do sursis antes mesmo da sentença do novo processo." },
+            { id: "D", text: "A prorrogação depende necessariamente de prévia decisão judicial provocada pelo Ministério Público antes do termo final do prazo." }
+        ],
+        correct: "B",
+        reasonCorrect: "Conforme o art. 81, § 2º, do Código Penal, se o beneficiário está sendo processado por outro crime ou contravenção, considera-se PRORROGADO O PERÍODO DE PROVA até o julgamento definitivo, de forma AUTOMÁTICA.",
+        reasonsIncorrect: {
+            "A": "Incorreta. A extinção da pena não pode ser declarada enquanto pendente julgamento de processo que prorrogou automaticamente o prazo (art. 82 do CP).",
+            "C": "Incorreta. O simples fato de responder ao processo acarreta prorrogação e não revogação direta (que exige condenação transitada em julgado).",
+            "D": "Incorreta. A prorrogação operada pelo art. 81, § 2º, é automática por força de lei."
+        }
     },
     {
-        question: "Sobre a Remição de Pena disciplinada na LEP, assinale a correta:",
+        id: 12,
+        topic: "Cassação do Sursis",
+        statement: "Distinguindo-se da revogação e da extinção, a CASSAÇÃO do sursis penal ocorre quando o benefício fica sem efeito antes do início do cumprimento do período de prova. É hipótese de cassação do sursis:",
         options: [
-            { id: "A", text: "Remição pelo trabalho exige 1 dia remido a cada 2 dias trabalhados, permitida apenas no regime fechado.", correct: false, rationale: "É 1 dia a cada 3 dias de trabalho, permitida no fechado E no semiaberto." },
-            { id: "B", text: "Remição pelo estudo ocorre na proporção de 1 dia de pena para cada 12 horas de frequência escolar.", correct: true, rationale: "Regra expressa de proporção de estudo (1 dia a cada 12 horas) presente no material." },
-            { id: "C", text: "A conclusão do ensino médio durante o cumprimento da pena permite o acréscimo de 1/6 no tempo remido.", correct: false, rationale: "O acréscimo (bônus) de conclusão de ensino é de 1/3 do tempo remido, não 1/6." },
-            { id: "D", text: "O STJ, por falta de previsão legal expressa, veda terminantemente a remição pela leitura.", correct: false, rationale: "O material informa que o STJ admite a remição pela leitura e elaboração de resenhas." }
-        ]
+            { id: "A", text: "A prática de novo crime doloso durante o período de prova." },
+            { id: "B", text: "A recusa injustificada do réu ou o seu não comparecimento à audiência admonitória." },
+            { id: "C", text: "O descumprimento de condição judicial após 6 meses de cumprimento do período de prova." },
+            { id: "D", text: "O advento de doença mental superveniente ao trânsito em julgado." }
+        ],
+        correct: "B",
+        reasonCorrect: "A cassação ocorre antes do início do período de prova (ex: réu recusa as condições na audiência admonitória ou não comparece injustificadamente; ou o Tribunal provê recurso para aumentar a pena para além do limite do sursis).",
+        reasonsIncorrect: {
+            "A": "Incorreta. Prática de crime com trânsito em julgado durante a prova gera revogação obrigatória.",
+            "C": "Incorreta. Ocorrendo durante o período de prova, trata-se de hipótese de revogação (facultativa).",
+            "D": "Incorreta. Doença mental superveniente suspende a execução da pena/medida e não causa cassação do sursis."
+        }
     },
     {
-        question: "Acerca do Agravo em Execução, recurso aplicável nesta fase processual:",
+        id: 13,
+        topic: "Jurisprudência (Revogação Pós-Prazo)",
+        statement: "Considere a seguinte situação: Durante o período de prova do sursis, o beneficiário cometeu crime doloso e foi condenado por sentença transitada em julgado. Contudo, o juiz da execução penal só tomou conhecimento do trânsito em julgado e proferiu a decisão de revogação do sursis 3 meses APÓS a data final prevista para o período de prova. De acordo com a jurisprudência sumulada e consolidada do STF e STJ:",
         options: [
-            { id: "A", text: "Possui prazo de 15 dias, seguindo o rito da Apelação, sem juízo de retratação.", correct: false, rationale: "O prazo é de 5 dias e segue o rito do Recurso em Sentido Estrito (RESE)." },
-            { id: "B", text: "Em regra, possui efeito suspensivo automático para todas as decisões.", correct: false, rationale: "Em regra, NÃO possui efeito suspensivo. A exceção é recurso do MP contra desinternação de medida de segurança." },
-            { id: "C", text: "Cabe contra as decisões do Juiz da Execução Penal, tem prazo de 5 dias (Súm. 700/STF) e admite juízo de retratação.", correct: true, rationale: "O recurso segue o rito do RESE, tem prazo de 5 dias e admite juízo de retratação, sendo cabível contra todas as decisões do Juiz da Execução." },
-            { id: "D", text: "Pode ser interposto contra decisões disciplinares do Diretor do Presídio diretamente ao Tribunal.", correct: false, rationale: "Cabe contra decisões do Juiz da Execução Penal." }
-        ]
+            { id: "A", text: "A decisão de revogação é inválida, pois precluiu o direito de revogar o benefício após o termo final do período de prova." },
+            { id: "B", text: "É válida a revogação do sursis mesmo após o término do período de prova, desde que a causa de revogação tenha ocorrido DURANTE o referido período." },
+            { id: "C", text: "O juiz deve converter a revogação em multa rescisória, extinguindo a pena pelo decurso do tempo." },
+            { id: "D", text: "A pena é automaticamente extinta, cabendo ação de indenização ao apenado." }
+        ],
+        correct: "B",
+        reasonCorrect: "STF e STJ possuem entendimento pacificado de que a revogação do sursis pode ser decretada mesmo após o término do período de prova, desde que o fato motivador (a causa de revogação obrigatória ou a infração) tenha ocorrido dentro do período de prova.",
+        reasonsIncorrect: {
+            "A": "Incorreta. O fim do prazo cronológico não impede a revogação extemporânea fundada em fato ocorrido dentro da vigência da prova.",
+            "C": "Incorreta. Não existe previsão legal de conversão de sursis em multa rescisória.",
+            "D": "Incorreta. Não há extinção automática da pena se houve causa legal de revogação praticada no período."
+        }
     },
     {
-        question: "Quanto à Monitoração Eletrônica (tornozeleira), de acordo com a LEP e atualizações:",
+        id: 14,
+        topic: "Jurisprudência (Crimes Hediondos e Tráfico)",
+        statement: "Em matéria de crimes hediondos e equiparados (como o tráfico ilícito de entorpecentes), assinale a afirmativa correta quanto ao cabimento do sursis penal:",
         options: [
-            { id: "A", text: "Pode ser determinada pelo Diretor do Presídio visando a segurança das saídas temporárias.", correct: false, rationale: "É cabível EXCLUSIVAMENTE por ordem do juiz." },
-            { id: "B", text: "É obrigatória para saídas de condenados por violência contra a mulher, conforme Lei 14.994/24.", correct: true, rationale: "Regra explícita inserida pela recente Lei 14.994/24 constante no material." },
-            { id: "C", text: "É incabível para o regime aberto, destinando-se unicamente ao regime semiaberto.", correct: false, rationale: "As inovações permitem o uso para penas em regime aberto/semiaberto e livramento condicional." },
-            { id: "D", text: "A não conservação do aparelho é tratada como falta leve a ser regulada pelo Estado.", correct: false, rationale: "O texto indica (Lei 14.843/24) que a conservação é um DEVER (Art. 39). Descumprir condições sujeita a sanção grave, não leve." }
-        ]
+            { id: "A", text: "É absolutamente vedada a concessão de sursis para qualquer crime hediondo ou equiparado por expressa vedação constitucional insuperável." },
+            { id: "B", text: "O STF declarou a inconstitucionalidade da vedação abstrata ao sursis no delito de tráfico de drogas, sendo admissível a concessão (especialmente no tráfico privilegiado), desde que preenchidos os requisitos do art. 77 do CP." },
+            { id: "C", text: "O sursis é permitido para crimes hediondos, mas restrito exclusivamente a réus maiores de 80 anos de idade." },
+            { id: "D", text: "A concessão de sursis para crimes hediondos exige que a pena aplicada seja inferior a 6 meses de reclusão." }
+        ],
+        correct: "B",
+        reasonCorrect: "A jurisprudência dos Tribunais Superiores (STF/STJ) admite a concessão de sursis a crimes hediondos e equiparados. Em relação à Lei de Drogas, o STF afastou a vedação legal genérica, permitindo sursis (notadamente no tráfico privilegiado - art. 33, § 4º) quando a PPL não for substituída por PRD e preencher o art. 77 do CP.",
+        reasonsIncorrect: {
+            "A": "Incorreta. A vedação absoluta foi superada pela jurisprudência dos Tribunais Superiores.",
+            "C": "Incorreta. O critério de idade do sursis etário é 70 anos na sentença, e não há exigência de 80 anos.",
+            "D": "Incorreta. A regra geral do art. 77 exige pena não superior a 2 anos (e não 6 meses)."
+        }
     },
     {
-        question: "Em relação ao crime de Feminicídio, qual é a fração de progressão de regime exigida para condenado primário (Lei 14.994/24)?",
+        id: 15,
+        topic: "Concurso de Crimes e Sursis",
+        statement: "Na hipótese de concurso de crimes (concurso material, formal ou crime continuado), o parâmetro de pena a ser considerado pelo magistrado para verificar o cabimento do sursis (limite de 2 anos na regra geral) é:",
         options: [
-            { id: "A", text: "40%", correct: false, rationale: "40% é para crimes hediondos sem resultado morte (primário)." },
-            { id: "B", text: "50%", correct: false, rationale: "50% aplica-se a hediondo com morte (antes da lei específica) ou comando de milícia." },
-            { id: "C", text: "55%", correct: true, rationale: "De acordo com a tabela do Pacote Anticrime atualizada pela Lei 14.994/24, a fração é 55% para primário em Feminicídio." },
-            { id: "D", text: "70%", correct: false, rationale: "70% é a fração mais gravosa, reservada para reincidente específico em crime hediondo com morte." }
-        ]
+            { id: "A", text: "A pena do crime mais grave isoladamente, desprezando-se o concurso de crimes." },
+            { id: "B", text: "A pena resultante da soma (concurso material) ou da exasperação (concurso formal/crime continuado)." },
+            { id: "C", text: "A média aritmética das penas aplicadas aos crimes em concurso." },
+            { id: "D", text: "Sempre a pena mínima em abstrato cominada ao delito de maior menor potencial ofensivo." }
+        ],
+        correct: "B",
+        reasonCorrect: "Segundo a jurisprudência consolidada (Súmulas 243 do STJ e 723 do STF adaptadas), no concurso de crimes considera-se a pena total praticada (soma no concurso material ou pena elevada no concurso formal/crime continuado). Se ultrapassar 2 anos, inviabiliza-se o sursis penal.",
+        reasonsIncorrect: {
+            "A": "Incorreta. Ignorar a soma ou exasperação viola os critérios legais de aferição da sanção aplicada.",
+            "C": "Incorreta. Não se utiliza média aritmética no cálculo da pena final no CP.",
+            "D": "Incorreta. Esse critério de pena em abstrato aplica-se à Suspensão Condicional do Processo (art. 89 da Lei 9.099/95), e não ao Sursis Penal."
+        }
     },
     {
-        question: "Mévio, cumprindo pena no regime fechado, recusa-se a submeter-se à extração de perfil genético (DNA). Essa conduta:",
+        id: 16,
+        topic: "Sursis Penal vs. Sursis Processual",
+        statement: "Diferenciando o Sursis Penal (art. 77, CP) do Sursis Processual (art. 89 da Lei 9.099/95), assinale a afirmativa INCORRETA:",
         options: [
-            { id: "A", text: "É garantida pelo princípio da não autoincriminação e não configura infração disciplinar.", correct: false, rationale: "Segundo o Pacote Anticrime (incluído na LEP), a recusa do DNA configura falta grave." },
-            { id: "B", text: "Configura falta média, aplicável após sindicância do diretor da unidade.", correct: false, rationale: "Configura falta GRAVE definida pela LEP." },
-            { id: "C", text: "Configura falta grave, implicando regressão de regime se houver procedimento com oitiva do preso ou PAD.", correct: true, rationale: "A recusa do DNA é elencada nas Principais Faltas Graves, cujo procedimento exige PAD (ou oitiva judicial)." },
-            { id: "D", text: "Causa a perda automática e integral de todos os dias remidos.", correct: false, rationale: "A perda de dias remidos é de ATÉ 1/3, nunca integral ou automática, dependendo de fundamentação judicial." }
-        ]
+            { id: "A", text: "O Sursis Penal pressupõe sentença penal condenatória, enquanto o Sursis Processual ocorre no início do processo, antes da instrução e sem juízo de condenação." },
+            { id: "B", text: "No Sursis Penal, afere-se o limite de 2 anos com base na pena APLICADA na sentença; no Sursis Processual, afere-se o limite de 1 ano com base na pena MÍNIMA COMINADA em abstrato." },
+            { id: "C", text: "O cumprimento bem-sucedido do Sursis Processual gera reincidência e maus antecedentes para o réu." },
+            { id: "D", text: "Em ambas as modalidades existem condições legais e judiciais impostas ao beneficiário durante o período de prova." }
+        ],
+        correct: "C",
+        reasonCorrect: "A afirmativa C é a incorreta (logo a resposta certa). O cumprimento do Sursis Processual extingue a punibilidade SEM julgamento de mérito condenatório, NÃO gerando reincidência nem maus antecedentes.",
+        reasonsIncorrect: {
+            "A": "Incorreta como resposta (pois é afirmativa verdadeira). De fato, o sursis penal é pós-condenação e o processual é pré-instrução.",
+            "B": "Incorreta como resposta (é afirmativa verdadeira). Distinção clássica entre pena concretizada (penal) vs. pena mínima em abstrato (processual).",
+            "D": "Incorreta como resposta (é afirmativa verdadeira). Ambos preveem a submissão a condições durante a prova."
+        }
     },
     {
-        question: "Tício, condenado por integrar o comando de organização criminosa, requer progressão de regime. Para este caso, a fração exigida é:",
+        id: 17,
+        topic: "Sursis a Estrangeiros e Réus Ausentes",
+        statement: "Acerca da concessão do sursis penal a estrangeiros e réus reveis/ausentes, consoante a orientação do Supremo Tribunal Federal, assinale a afirmativa correta:",
         options: [
-            { id: "A", text: "25%", correct: false, rationale: "25% é para primário com violência ou grave ameaça." },
-            { id: "B", text: "40%", correct: false, rationale: "40% é para crime hediondo sem morte (primário)." },
-            { id: "C", text: "50%", correct: true, rationale: "Organização Criminosa/Milícia (Comando) exige cumprimento de 50% da pena." },
-            { id: "D", text: "60%", correct: false, rationale: "60% é para reincidente específico em crime hediondo sem morte." }
-        ]
+            { id: "A", text: "É vedada a concessão de sursis a estrangeiro que esteja em trânsito no território nacional." },
+            { id: "B", text: "É admissível a concessão de sursis a estrangeiro em trânsito no Brasil, bem como ao réu revel/ausente, desde que preenchidos os requisitos legais." },
+            { id: "C", text: "O réu revel perde automaticamente o direito público subjetivo ao sursis penal em razão da contumácia." },
+            { id: "D", text: "O sursis de estrangeiro depende obrigatoriamente de prévia anuência da Embaixada de seu país de origem." }
+        ],
+        correct: "B",
+        reasonCorrect: "O STF pacificou o entendimento de que a condição de estrangeiro em trânsito ou de réu revel não impede a concessão da suspensão condicional da pena, por se tratar de direito público subjetivo quando atendidos os pressupostos do art. 77 do CP.",
+        reasonsIncorrect: {
+            "A": "Incorreta. O STF entende que o estrangeiro em trânsito faz jus ao benefício.",
+            "C": "Incorreta. A revelia por si só não cassa o direito subjetivo ao sursis.",
+            "D": "Incorreta. Não há qualquer ingerência ou necessidade de anuência diplomática."
+        }
     },
     {
-        question: "Sobre a progressão de regime em crimes contra a Administração Pública:",
+        id: 18,
+        topic: "Sursis Penal vs. Indulto",
+        statement: "Sobre a relação entre a Suspensão Condicional da Pena e o instituto do Indulto Presidencial, assinale a opção correta:",
         options: [
-            { id: "A", text: "Exige o cumprimento de 40% da pena independentemente de reincidência.", correct: false, rationale: "A fração depende da primariedade e violência, mas o requisito subjetivo diferencial é o ressarcimento." },
-            { id: "B", text: "Exige-se, como requisito subjetivo especial, o ressarcimento do dano (Tema 772/STF).", correct: true, rationale: "Regra constante nos requisitos subjetivos para Progressão de Regime, conforme entendimento do STF." },
-            { id: "C", text: "A lei proíbe a progressão, submetendo o condenado a regime integralmente fechado.", correct: false, rationale: "A progressão é direito subjetivo, não vedada neste caso, mas condicionada ao ressarcimento." },
-            { id: "D", text: "A progressão só ocorre após devolução em dobro do montante desviado.", correct: false, rationale: "Exige-se o ressarcimento do dano, mas a lei/texto não menciona 'devolução em dobro'." }
-        ]
+            { id: "A", text: "O gozo do sursis penal é incompatível com o benefício do indulto natalino." },
+            { id: "B", text: "É perfeitamente compatível a concessão de indulto ao condenado que se encontra cumprindo o período de prova do sursis penal, desde que preenchidos os requisitos do decreto presidencial." },
+            { id: "C", text: "A concessão de indulto obriga o condenado a cumprir o dobro do período de prova remanescente." },
+            { id: "D", text: "O indulto só pode ser concedido a quem cumpre pena em regime fechado, vedada sua aplicação a beneficiários de sursis." }
+        ],
+        correct: "B",
+        reasonCorrect: "É pacífico na jurisprudência que quem está em gozo de sursis penal pode ser contemplado por decreto de indulto, resultando na extinção da pena e na liberação das obrigações do período de prova.",
+        reasonsIncorrect: {
+            "A": "Incorreta. Existe plena compatibilidade entre os dois institutos.",
+            "C": "Incorreta. O indulto extingue a pena e a sanção, não dobrando prazo.",
+            "D": "Incorreta. O decreto de indulto pode alcançar pessoas com penas suspensas ou em livramento condicional."
+        }
     },
     {
-        question: "Quais dos prazos abaixo NÃO são interrompidos em caso de cometimento de falta grave no curso da execução penal?",
+        id: 19,
+        topic: "Sursis Sucessivos e Simultâneos",
+        statement: "Considere a hipótese em que determinado indivíduo, enquanto cumpre o período de prova de um sursis penal previamente concedido por crime culposo, vem a ser condenado em novo processo por outro crime CULPOSO com pena privativa de liberdade de 1 ano. Sabendo-se que a nova condenação não enseja revogação obrigatória, assinale a afirmativa correta:",
         options: [
-            { id: "A", text: "Progressão de regime e autorizações de saída.", correct: false, rationale: "A progressão de regime tem o prazo INTERROMPIDO (zerado) pela falta grave (Súm. 534/STJ)." },
-            { id: "B", text: "Prazo para Livramento Condicional e Indulto/Comutação.", correct: true, rationale: "Conforme jurisprudência (Súmulas 441 e 535 do STJ), a falta grave não interrompe esses prazos." },
-            { id: "C", text: "Prazo para progressão de regime e remição de pena.", correct: false, rationale: "O prazo da progressão é interrompido. A remição sofre perda de até 1/3." },
-            { id: "D", text: "Prazo de prescrição executória e do exame criminológico.", correct: false, rationale: "Não há menção a prescrição executória no texto limitador de interrupções, e o Livramento Condicional e Indulto é a resposta exata." }
-        ]
+            { id: "A", text: "É vedado novo sursis, devendo o réu necessariamente cumprir a nova pena em regime aberto." },
+            { id: "B", text: "É possível a concessão de novo sursis, hipótese em que o condenado cumprirá ambos os sursis simultaneamente." },
+            { id: "C", text: "O primeiro sursis será automaticamente anulado e substituído por prisão preventiva." },
+            { id: "D", text: "O segundo sursis só poderá ser iniciado após o encerramento do período de prova do primeiro (sursis sucessivo)." }
+        ],
+        correct: "B",
+        reasonCorrect: "Se a nova condenação por crime culposo não acarretar a revogação do primeiro sursis (pois a revogação por crime culposo é facultativa), o réu poderá obter um segundo sursis, executando-se ambos os benefícios simultaneamente.",
+        reasonsIncorrect: {
+            "A": "Incorreta. A reincidência em crime culposo não veda a concessão de novo sursis.",
+            "C": "Incorreta. Crime culposo enseja revogação facultativa e não anulação automática por preventiva.",
+            "D": "Incorreta. Os prazos correm concomitantemente/simultaneamente quando compatíveis."
+        }
     },
     {
-        question: "Os Princípios Fundamentais regem a execução penal. Assinale a correta correspondência baseada no texto fornecido:",
+        id: 20,
+        topic: "Extinção da Pena",
+        statement: "Decorrido o período de prova sem que tenha havido revogação nem prorrogação do sursis penal, o juiz da execução penal deverá:",
         options: [
-            { id: "A", text: "Princípio da Legalidade: admite-se a punição por falta não prevista expressamente se representar ameaça grave ao presídio.", correct: false, rationale: "A Legalidade dispõe exatamente o contrário: não há falta nem sanção sem previsão legal." },
-            { id: "B", text: "Princípio da Igualdade: permite a segregação e distinção entre apenados baseada na vertente religiosa.", correct: false, rationale: "O Princípio da Igualdade (Art. 3º, PU) veda distinção racial, social, religiosa ou política." },
-            { id: "C", text: "Princípio da Humanidade: assegura o respeito à integridade física e moral dos condenados e presos provisórios.", correct: true, rationale: "Exata definição do Art. 40 da LEP e do princípio da humanidade destacado no material." },
-            { id: "D", text: "Princípio da Personalização: uniformiza o cumprimento da pena, vedando adequações às condições pessoais.", correct: false, rationale: "O Princípio da Personalização obriga que a execução seja ADEQUADA (individualizada) às condições pessoais do apenado." }
-        ]
+            { id: "A", text: "Determinar a prisão do condenado para cumprimento do terço restante da pena." },
+            { id: "B", text: "Declarar extinta a pena privativa de liberdade." },
+            { id: "C", text: "Converter o sursis em prestação de serviços à comunidade por mais um ano." },
+            { id: "D", text: "Prorrogar o período de prova por igual período por medida de precaução social." }
+        ],
+        correct: "B",
+        reasonCorrect: "Nos termos do art. 82 do Código Penal, expirado o prazo do período de prova sem revogação (e sem causa de prorrogação automática), declara-se extinta a pena privativa de liberdade.",
+        reasonsIncorrect: {
+            "A": "Incorreta. Cumprido o período de prova com êxito, a pena é extinta e não cumprida em prisão.",
+            "C": "Incorreta. Não há fundamentação legal para impor novas penas após o cumprimento bem-sucedido.",
+            "D": "Incorreta. A prorrogação exige previsão legal expressa (art. 81) e não pode ser feita por mero arbítrio."
+        }
     }
 ];
 
-let currentQIndex = 0;
+let answeredCount = 0;
 let score = 0;
 
-const questionTextEl = document.getElementById('question-text');
-const optionsContainer = document.getElementById('options-container');
-const qCounterEl = document.getElementById('q-counter');
-const scoreCounterEl = document.getElementById('score-counter');
-const progressFill = document.getElementById('progress-fill');
-const btnNext = document.getElementById('btn-next');
-const feedbackContainer = document.getElementById('feedback-container');
-const feedbackContent = document.getElementById('feedback-content');
-const quizContent = document.getElementById('quiz-content');
-const resultScreen = document.getElementById('result-screen');
-const finalScoreEl = document.getElementById('final-score');
-const btnRestart = document.getElementById('btn-restart');
+function renderQuiz() {
+    const container = document.getElementById("quiz-container");
+    container.innerHTML = "";
 
-function renderQuestion() {
-    const qData = quizData[currentQIndex];
-    qCounterEl.textContent = `Questão ${currentQIndex + 1} de ${quizData.length}`;
-    progressFill.style.width = `${((currentQIndex) / quizData.length) * 100}%`;
-    
-    questionTextEl.textContent = `${currentQIndex + 1}. ${qData.question}`;
-    optionsContainer.innerHTML = '';
-    feedbackContainer.style.display = 'none';
-    btnNext.style.display = 'none';
-    
-    qData.options.forEach((opt, index) => {
-        const div = document.createElement('div');
-        div.className = 'option';
-        div.innerHTML = `<strong>${opt.id})</strong> ${opt.text}`;
-        div.onclick = () => handleOptionClick(index);
-        optionsContainer.appendChild(div);
+    quizData.forEach((q, index) => {
+        const card = document.createElement("div");
+        card.className = "question-card";
+        card.id = `q-${index}`;
+
+        let optionsHTML = "";
+        q.options.forEach(opt => {
+            optionsHTML += `
+                <button class="option-btn" data-q="${index}" data-opt="${opt.id}" onclick="handleSelect(${index}, '${opt.id}')">
+                    <span class="option-letter">${opt.id}</span>
+                    <span>${opt.text}</span>
+                </button>
+            `;
+        });
+
+        let incorrectListHTML = "";
+        for (const [key, val] of Object.entries(q.reasonsIncorrect)) {
+            incorrectListHTML += `<li><strong>Alternativa ${key}:</strong> ${val}</li>`;
+        }
+
+        card.innerHTML = `
+            <div class="question-header">
+                <span class="question-num">Questão ${q.id} de 20</span>
+                <span class="question-topic">${q.topic}</span>
+            </div>
+            <div class="statement">${q.statement}</div>
+            <div class="options">${optionsHTML}</div>
+            <div class="explanation" id="exp-${index}">
+                <h4>Fundamentação & Análise Detalhada</h4>
+                <div class="correct-reason">
+                    <strong>RESPOSTA CORRETA (${q.correct}):</strong> ${q.reasonCorrect}
+                </div>
+                <div class="incorrect-reasons">
+                    <h5>Análise das Alternativas Incorretas:</h5>
+                    <ul>${incorrectListHTML}</ul>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(card);
     });
 }
 
-function handleOptionClick(selectedIndex) {
-    const optionsDivs = optionsContainer.children;
-    if (optionsDivs[0].classList.contains('disabled')) return; // already answered
-    
-    const qData = quizData[currentQIndex];
-    const isCorrect = qData.options[selectedIndex].correct;
-    
-    if (isCorrect) score++;
-    scoreCounterEl.textContent = `Acertos: ${score}`;
-    
-    for (let i = 0; i < optionsDivs.length; i++) {
-        optionsDivs[i].classList.add('disabled');
-        if (i === selectedIndex) {
-            optionsDivs[i].classList.add(isCorrect ? 'selected-correct' : 'selected-incorrect');
-        }
-        if (qData.options[i].correct && i !== selectedIndex) {
-            optionsDivs[i].classList.add('show-correct');
-        }
-    }
-    
-    renderFeedback(qData, selectedIndex);
-    btnNext.style.display = 'block';
-    
-    if (currentQIndex === quizData.length - 1) {
-        btnNext.textContent = 'Ver Resultados';
-    }
-}
+function handleSelect(questionIndex, selectedOption) {
+    const q = quizData[questionIndex];
+    const card = document.getElementById(`q-${questionIndex}`);
+    const buttons = card.querySelectorAll(".option-btn");
+    const exp = document.getElementById(`exp-${questionIndex}`);
 
-function renderFeedback(qData, selectedIndex) {
-    feedbackContent.innerHTML = '';
-    qData.options.forEach((opt, idx) => {
-        const item = document.createElement('div');
-        item.className = 'feedback-item';
-        
-        const badge = document.createElement('span');
-        badge.className = opt.correct ? 'badge badge-v' : 'badge badge-f';
-        badge.textContent = opt.correct ? 'V' : 'F';
-        
-        const label = document.createElement('strong');
-        label.textContent = `Alternativa ${opt.id}: `;
-        
-        const rationale = document.createElement('span');
-        rationale.textContent = opt.rationale;
-        
-        item.appendChild(badge);
-        item.appendChild(label);
-        item.appendChild(rationale);
-        
-        if (idx === selectedIndex) {
-            item.style.backgroundColor = opt.correct ? '#EAFAF1' : '#FDEDEC';
-            item.style.padding = '8px';
-            item.style.borderRadius = '5px';
-            item.style.marginBottom = '12px';
+    // Desabilita botões desta questão
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        const optId = btn.getAttribute("data-opt");
+        if (optId === q.correct) {
+            btn.classList.add("show-correct-target");
         }
-        
-        feedbackContent.appendChild(item);
     });
-    feedbackContainer.style.display = 'block';
-}
 
-btnNext.onclick = () => {
-    currentQIndex++;
-    if (currentQIndex < quizData.length) {
-        renderQuestion();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    const selectedBtn = card.querySelector(`[data-opt="${selectedOption}"]`);
+
+    if (selectedOption === q.correct) {
+        selectedBtn.classList.add("selected-correct");
+        score++;
     } else {
-        showResults();
+        selectedBtn.classList.add("selected-incorrect");
     }
-};
 
-function showResults() {
-    quizContent.style.display = 'none';
-    resultScreen.style.display = 'block';
-    progressFill.style.width = '100%';
-    
-    const percentage = ((score / quizData.length) * 100).toFixed(0);
-    let msg = '';
-    if (percentage >= 80) msg = "Excelente domínio da LEP e jurisprudência!";
-    else if (percentage >= 60) msg = "Bom resultado, mas requer revisão nos pontos errados.";
-    else msg = "Foco na revisão da Decoreba Estratégica e prazos!";
-    
-    finalScoreEl.innerHTML = `Você acertou <strong>${score}</strong> de ${quizData.length} questões (${percentage}%).<br><br><em>${msg}</em>`;
+    answeredCount++;
+    document.getElementById("answered-count").innerText = `${answeredCount} / 20`;
+    document.getElementById("score").innerText = score;
+
+    exp.classList.add("visible");
 }
 
-btnRestart.onclick = () => {
-    currentQIndex = 0;
-    score = 0;
-    scoreCounterEl.textContent = `Acertos: 0`;
-    quizContent.style.display = 'block';
-    resultScreen.style.display = 'none';
-    btnNext.textContent = 'Próxima Questão';
-    renderQuestion();
-};
-
-// Start
-renderQuestion();
+document.addEventListener("DOMContentLoaded", renderQuiz);
 </script>
+
 </body>
 </html>
